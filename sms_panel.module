@@ -1,0 +1,113 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * SMS Panel hooks implementations and helper API functions.
+ */
+
+/**
+ * Module constants.
+ */
+define('SMS_IN', 'IN');
+define('SMS_OUT', 'OUT');
+
+/**
+ * Implementation of hook_init().
+ */
+function sms_panel_init() {
+  
+}
+
+/**
+ * Implementation of hook_sms_send_alter().
+ *
+ * This is a temporary implementation since 
+ * we're using a patched version of the smsframework and
+ * it's not available in the original version.
+ *
+ * @param $outgoing
+ *   An array of following data passed by reference:
+ *   - number: Phone number of recipient.
+ *   - message: SMS text body.
+ *   - response: The response of gateway's send callback.
+ */
+function sms_panel_sms_send_alter(&$outgoing) {
+  global $user;
+  $gateway = sms_default_gateway();
+  
+  $sms = new stdClass();  
+  $sms->uid = $user->uid;
+  $sms->timestamp = time();
+  $sms->direction = SMS_OUT;
+  $sms->number = $outgoing['number'];  
+  $sms->message = $outgoing['message'];
+  $sms->gateway = $gateway['identifier'];
+  
+  sms_save($sms);
+}
+
+/**
+ * Implementation of hook_sms_incoming().
+ */
+function sms_panel_sms_incoming($op, $number, $message, $options) {
+  if ($op == 'post process') {
+    $sms = new stdClass();
+    $sms->number = $number;
+    $sms->timestamp = time();
+    $sms->message = $message;
+    $sms->direction = SMS_IN;
+    $sms->gateway = sms_default_gateway();
+    
+    sms_save($sms);
+  }
+}
+
+/**
+ * Helper function to save a sms message to database.
+ *
+ * @param $sms
+ *   SMS object to be saved.
+ *
+ * @todo
+ *   Extend to check access permissions.
+ */
+function sms_save($sms) {
+  if (is_array($sms)) {
+    $sms = (object) $sms;
+  }
+  
+  $sms->uid = ($sms->uid) ? $sms->uid : 0;
+  $sms->timestamp = $sms->timestamp ? $sms->timestamp : time();
+  drupal_write_record('sms_messages', $sms);
+}
+
+/**
+ * Helper function to delete a sms message from database.
+ *
+ * @param $sid
+ *   SMS object or identifier to be deleted.
+ *
+ * @todo
+ *   Extend to check access permissions.
+ */
+function sms_delete($sid) {
+  $sid = is_object($sid) ? $sid->sid : $sid;
+  db_query("DELETE FROM {sms_messages} WHERE sid = %d", $sid);
+}
+
+/**
+ * Helper function to load a sms message from database.
+ *
+ * @param $sid
+ *   SMS identifier to be loaded.
+ * 
+ * @return
+ *   The load SMS object.
+ *
+ * @todo
+ *   Extend to be able to match other conditions.
+ */
+function sms_load($sid) {
+  return db_fetch_object(db_query("SELECT * FROM {sms_messages} WHERE sid = %d", $sid));
+}

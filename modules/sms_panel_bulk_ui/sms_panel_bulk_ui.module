@@ -1,0 +1,11 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * SMS Panel Bulk UI hooks implementations and helper functions.
+ */
+
+/**
+ * Implementation of hook_menu().
+ */

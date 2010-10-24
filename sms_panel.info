@@ -1,0 +1,6 @@
+; $Id$
+name = "SMS Panel API"
+description = "Provides a simple API for to have a central SMS management panel."
+core = 6.x
+package = SMS Framework
+dependencies[] = sms

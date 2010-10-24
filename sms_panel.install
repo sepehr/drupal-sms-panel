@@ -1,0 +1,88 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * SMS Panel un/installation hooks.
+ */
+
+/**
+ * Implementation of hook_install().
+ */
+function sms_panel_install() {
+  drupal_install_schema('sms_panel');
+  drupal_set_message(st('SMS Panel API has been successfully installed.'));
+}
+
+/**
+ * Implementation of hook_schema().
+ */
+function sms_panel_schema() {
+  $schema = array();
+  
+  $schema['sms_messages'] = array(
+    'description' => 'The base table for SMS messages.',
+    'fields' => array(
+      'sid' => array(
+        'description' => 'The primary SMS identifier.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'uid' => array(
+        'description' => 'The user identifier who sends a SMS message.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'direction' => array(
+        'description' => 'The direction of the message.',
+        'type' => 'varchar',
+        'length' => 3,
+        'not null' => TRUE,        
+      ),
+      'number' => array(
+        'description' => 'Sender or reciever number',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => 'Unknown',
+      ),
+      'message' => array(
+        'description' => 'The SMS message body.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'gateway' => array(
+        'description' => 'The gateway identifier used to send or recieve this message.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,        
+      ),
+      'timestamp' => array(
+        'description' => 'The timestamp of sending or recieving message.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+    ),
+    'indexes' => array(
+      'sms_msg_uid' => array('uid'),
+      'sms_msg_number' => array('number'),
+      'sms_msg_direction' => array('direction'),
+      'sms_msg_timestamp' => array('timestamp'),
+    ),
+    'primary key' => array('sid'),
+  );
+  
+  return $schema;
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function sms_panel_uninstall() {
+  drupal_uninstall_schema('sms_panel');
+}

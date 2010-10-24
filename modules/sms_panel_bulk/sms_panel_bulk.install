@@ -1,0 +1,78 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * SMS Panel Bulk un/installation hooks.
+ */
+
+/**
+ * Implementation of hook_install().
+ */
+function sms_panel_bulk_install() {
+  drupal_install_schema('sms_panel_bulk');
+}
+
+/**
+ * Implementation of hook_schema().
+ */
+function sms_panel_bulk_schema() {
+  $schema = array();
+  
+  $schema['sms_messages_bulk'] = array(
+    'description' => 'The base table for recording bulk SMS sends.',
+    'fields' => array(
+      'bsid' => array(
+        'description' => 'The primary identifier for bulk sends.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'uid' => array(
+        'description' => 'The user identifier who sends a bulk SMS message.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'title' => array(
+        'description' => 'Bulk SMS send title.',
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+      ),
+      'message' => array(
+        'description' => 'The bulk sent SMS message body.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'timestamp' => array(
+        'description' => 'The timestamp of sending or recieving message.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'recipients' => array(
+        'description' => 'Serialized list of recipient numbers.',
+        'type' => 'text',
+        'size' => 'big',
+        'not null' => TRUE,
+      ),      
+    ),
+    'indexes' => array(
+      'sms_msg_blk_uid' => array('uid'),
+      'sms_msg_blk_timestamp' => array('timestamp'),
+    ),
+    'primary key' => array('bsid'),
+  );
+  
+  return $schema;
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function sms_panel_bulk_uninstall() {
+  drupal_uninstall_schema('sms_panel_bulk');
+}

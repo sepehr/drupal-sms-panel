@@ -1,0 +1,6 @@
+; $Id$
+name = "SMS Panel Bulk"
+description = "Provides the ability to send and log bulk SMS messages."
+core = 6.x
+package = SMS Framework
+dependencies[] = sms_panel
