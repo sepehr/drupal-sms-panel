@@ -139,7 +139,7 @@ function sms_delete($sid) {
  * Helper function to load a sms message from database.
  *
  * @param $params
- *   The sid of the SMS message or an array of conditions match against.
+ *   The sid of the SMS message or an array of conditions to match against.
  * @param $flush
  *   Whether to flush the internal cache.
  *
