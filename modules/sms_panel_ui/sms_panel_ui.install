@@ -1,0 +1,19 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * SMS Panel UI un/installation hooks.
+ */
+
+/**
+ * Implementation of hook_enable().
+ */
+function sms_panel_ui_enable() {
+  drupal_set_message(st('The !ui has been successfully enabled.',
+    array(
+      '!ui' => l('SMS Panel UI', 'admin/smsframework/panel'),
+    )
+  ));
+}
+

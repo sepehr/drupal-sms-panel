@@ -10,8 +10,8 @@
  * Module constants.
  * Defines placeholders for SMS message sending direction.
  */
-define('SMS_PANEL_IN', 'IN');
-define('SMS_PANEL_OUT', 'OUT');
+define('SMS_PANEL_IN', 0);
+define('SMS_PANEL_OUT', 1);
 
 /**
  * Implementation of hook_init().
@@ -95,7 +95,7 @@ function sms_panel_sms_panel_incoming($op, $number, $message, $options) {
  * @param $sms
  *   SMS object to be saved.
  */
-function sms_save($sms) {
+function sms_save(&$sms) {
   if (is_array($sms)) {
     $sms = (object) $sms;
   }
@@ -149,7 +149,7 @@ function sms_delete($sid) {
  * @todo
  *   Extend to be able to match other conditions.
  */
-function sms_load($params = array(), $flush = FALSE) {  
+function sms_load($params = array(), $flush = FALSE) { 
   static $cache = array();
   
   // Flush the internal cache, if set so.

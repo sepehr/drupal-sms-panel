@@ -37,8 +37,8 @@ function sms_panel_schema() {
       ),
       'direction' => array(
         'description' => 'The direction of the message.',
-        'type' => 'varchar',
-        'length' => 3,
+        'type' => 'int',
+        'unsigned' => TRUE,
         'not null' => TRUE,        
       ),
       'number' => array(

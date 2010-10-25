@@ -1,6 +1,6 @@
 ; $Id$
 name = "SMS Panel UI"
-description = "Provides UI for managing SMS messages."
+description = "Provides UI for SMS Panel API"
 core = 6.x
 package = SMS Framework
 dependencies[] = sms_panel
