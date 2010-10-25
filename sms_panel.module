@@ -17,7 +17,7 @@ define('SMS_PANEL_OUT', 'OUT');
  * Implementation of hook_init().
  */
 function sms_panel_init() {
-#  sms_delete(9);
+  
 }
 
 /**
@@ -138,15 +138,75 @@ function sms_delete($sid) {
 /**
  * Helper function to load a sms message from database.
  *
- * @param $sid
- *   SMS identifier to be loaded.
- * 
+ * @param $params
+ *   The sid of the SMS message or an array of conditions match against.
+ * @param $flush
+ *   Whether to flush the internal cache.
+ *
  * @return
- *   The load SMS object.
+ *   The loaded SMS object or an array of SMS objects or FALSE on fail.
  *
  * @todo
  *   Extend to be able to match other conditions.
  */
-function sms_load($sid) {
-  return db_fetch_object(db_query("SELECT * FROM {sms_messages} WHERE sid = %d", $sid));
+function sms_load($params = array(), $flush = FALSE) {  
+  static $cache = array();
+  
+  // Flush the internal cache, if set so.
+  if ($flush) {
+    $cache = array();
+  }
+  
+  // Check for cache availablity or build the query.
+  $arguments = array();
+  if (is_numeric($params)) {
+    if (isset($cache[$params])) {
+      return (object) $cache[$params];
+    }
+    $conditions = 'sid = %d';
+    $arguments[] = $params;
+  }
+  elseif (is_array($params)) {
+    // Convert array formatted parameters into a query.
+    foreach ($params as $key => $value) {
+      if ($key == 'period' && isset($value['from'])) {
+        $conditions[] = '(timestamp BETWEEN %d AND %d)';
+        $arguments[] = $value['from'];
+        $arguments[] = isset($value['to']) ? $value['to'] : time();
+      }
+      else {
+        $conditions[] = db_escape_table($key) . " = '%s'";
+        $arguments[] = $value;
+      }
+    }
+    $conditions = implode(' AND ', $conditions);
+  }
+  else {
+    return FALSE;
+  }
+  
+  // Get and iterate through the results.
+  $sms = array();
+  $conditions = $conditions ? $conditions : 'TRUE';
+  $results = db_query("SELECT * FROM {sms_messages} WHERE " . $conditions, $arguments);
+
+  while ($sms_object = db_fetch_object($results)) {
+    $sms[] = $sms_object;
+  }
+  unset($results);
+  
+  // Remove the array wrapper, if there were only one result.
+  $count = count($sms);
+  if ($count == 1) {
+    $sms = $sms[0];
+  }
+  elseif (!$count) {
+    return FALSE;
+  }
+  
+  // Cache it.
+  $cache[$sms->sid] = $sms;
+  
+  return $sms;
 }
+
