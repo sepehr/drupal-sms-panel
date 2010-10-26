@@ -16,3 +16,46 @@ function sms_panel_views_views_api() {
   );
 }
 
+/**
+ * Implementation of hook_form_alter().
+ */
+function sms_panel_views_form_alter(&$form, $form_state, $form_id) {
+  // Views to wrap their exposed filter fields in a fieldset.
+  $views_to_alter = array(
+    'sms_panel_incoming',
+    'sms_panel_outgoing',
+  );
+  
+  if (!module_exists('views_exposed_in_fieldset') && in_array($form_state['view']->name, $views_to_alter)) {
+    // Add the CSS file.
+    drupal_add_css(drupal_get_path('module', 'sms_panel_views') . '/css/exposed-in-fieldset.css', 'module');
+    
+    // Prepare the form and fields.
+    $fieldset = $form_id . '_fieldset';
+    $fields = element_children($form);
+    unset($fields['form_build_id'], $fields['form_token'], $fields['form_id']);
+    
+    // Build the new fieldset.
+    $form[$fieldset] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Filter Results'),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+    );
+    
+    // Move the keys to the new fieldset.
+    foreach ($fields as $field) {
+      $form[$fieldset][$field] = $form[$field];
+      unset($form[$field]);
+    }
+    
+    // Move field labels from [#info] array and flush.
+    foreach ($form['#info'] as $key => $info) {
+      $form[$fieldset][$info['value']]['#title'] = $form[$fieldset][$info['operator']]['#title'] = $info['label'];
+    }
+    $form['#info'] = array();
+  }
+    
+  // TODO: Move date filters to a separate fieldset.
+}
+

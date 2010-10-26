@@ -20,7 +20,7 @@ function sms_panel_install() {
 function sms_panel_schema() {
   $schema = array();
   
-  $schema['sms_messages'] = array(
+  $schema['smses'] = array(
     'description' => 'The base table for SMS messages.',
     'fields' => array(
       'sid' => array(
@@ -39,7 +39,7 @@ function sms_panel_schema() {
         'description' => 'The direction of the message.',
         'type' => 'int',
         'unsigned' => TRUE,
-        'not null' => TRUE,        
+        'not null' => TRUE,    
       ),
       'number' => array(
         'description' => 'Sender or reciever number',

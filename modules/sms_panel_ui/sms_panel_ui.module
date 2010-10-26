@@ -22,35 +22,69 @@ function sms_panel_ui_menu() {
   $items['admin/smsframework/panel/dashboard'] = array(
     'title' => 'Dashboard',
     'description' => 'Overall of site SMS messagings.',
-    'page_callback' => 'sms_panel_ui_page_dashboard',
+#    'page callback' => 'sms_panel_ui_page_dashboard',
     'access arguments' => array('administer sms panel'),
-    'file' => 'sms_panel_ui.pages.inc',    
+    'file' => 'sms_panel_ui.inc',
+    'weight' => 0,
     'type' => MENU_DEFAULT_LOCAL_TASK,
-    'weight' => 1,
   );
   
-  $items['admin/smsframework/panel/outgoing'] = array(
-    'title' => 'Outgoing',
-    'description' => 'Keep track of sent SMS messages.',
-    'page_callback' => 'sms_panel_ui_page_outgoing',
-    'access arguments' => array('view outgoing message logs'),
-    'file path' => drupal_get_path('drupal', 'sms_panel_ui'),
-    'file' => 'sms_panel_ui.pages.inc',
-    'type' => MENU_LOCAL_TASK,
+  // TODO: REVIEW!
+  $items['admin/smsframework/panel/sms/%sms'] = array(
+    'title callback' => 'sms_title',
+    'title argument' => array(4),
+    'page callback' => 'sms_panel_ui_page_sms',
+    'page arguments' => array(4),
+    'access arguments' => array('view sms message'),
+    'file' => 'sms_panel_ui.inc',
+    'type' => MENU_CALLBACK,
+  );
+  
+  $items['admin/smsframework/panel/sms/%sms/view'] = array(
+    'title' => 'View',
+    'weight' => 0,
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+  
+  $items['admin/smsframework/panel/sms/%sms/delete'] = array(
+    'title' => 'Delete',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('sms_panel_ui_sms_delete_confirm', 4),
+    'access arguments' => array('delete sms message'),
+    'file' => 'sms_panel_ui.inc',
     'weight' => 2,
-  );
-  
-  $items['admin/smsframework/panel/incoming'] = array(
-    'title' => 'Incoming',
-    'description' => 'Keep track of recieved SMS messages.',
-    'page_callback' => 'sms_panel_ui_page_incoming',
-    'access arguments' => array('view incoming message logs'),
-    'file path' => drupal_get_path('drupal', 'sms_panel_ui'),
-    'file' => 'sms_panel_ui.pages.inc',
     'type' => MENU_LOCAL_TASK,
-    'weight' => 3,
   );
   
   return $items;
+}
+
+/**
+ * Implementation of hook_theme().
+ */
+#function sms_panel_ui_theme($existing, $type, $theme, $path) {
+#  
+#}
+
+/**
+ * Helper function to return a SMS message URL.
+ *
+ * @param $sid
+ *   SMS identifier or object.
+ * @param $type
+ *   SMS URL type.
+ *
+ * @return
+ *   The SMS message URL.
+ */
+function sms_url($sid, $type = 'admin') {
+  if (is_object($sid)) {
+    $sid = $sid->sid;
+  }
+  
+  switch ($type) {
+    case 'admin':
+      return 'admin/smsframework/panel/sms/' . $sid;
+  }
 }
 

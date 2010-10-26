@@ -4,3 +4,4 @@ description = "Provides UI for SMS Panel API"
 core = 6.x
 package = SMS Framework
 dependencies[] = sms_panel
+dependencies[] = sms_panel_views

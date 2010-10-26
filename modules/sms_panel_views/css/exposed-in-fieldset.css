@@ -1,0 +1,21 @@
+/* $Id$ */
+
+/**
+ * @file
+ * Applies quick dirty hachs to fix some exposed fieledset issues.
+ */
+ 
+.views-exposed-form .views-exposed-widget {
+  width: 100%;
+}
+.views-exposed-form .form-item {
+  width: auto;
+  float: left;
+}
+.views-exposed-form .form-submit,
+.views-exposed-form .form-item[id$="-op-wrapper"],
+.views-exposed-form .form-item[id$="-value-wrapper"],
+.views-exposed-form .form-item[id$="-min-wrapper"],
+.views-exposed-form .form-item[id$="-max-wrapper"] {
+  clear: both;
+}

@@ -17,6 +17,7 @@ define('SMS_PANEL_OUT', 1);
  * Implementation of hook_init().
  */
 function sms_panel_init() {
+  // Temporary implemented for testing purposes.
   
 }
 
@@ -27,10 +28,10 @@ function sms_panel_perm() {
   return array(
     'administer sms panel',
     'send sms message',
-    'view outgoing message logs',
-    'delete outgoing message logs',
-    'view incoming message logs',
-    'delete incoming message logs',
+    'view sms message',
+    'delete sms message',    
+    'view outgoing message list',
+    'view incoming message list',
   );
 }
 
@@ -101,7 +102,7 @@ function sms_save(&$sms) {
   }
   
   $sms->timestamp = $sms->timestamp ? $sms->timestamp : time();
-  drupal_write_record('sms_messages', $sms);
+  drupal_write_record('smses', $sms);
 }
 
 /**
@@ -113,25 +114,14 @@ function sms_save(&$sms) {
 function sms_delete($sid) {
   global $user;
   $allowed = FALSE;
-  $sms = sms_load($sid);
   
-  switch ($sms->direction) {
-    case SMS_PANEL_OUT:
-      $allowed = (user_access('delete outgoing message logs')) ? TRUE : FALSE;
-      break;
-      
-    case SMS_PANEL_IN:
-      $allowed = (user_access('delete incoming message logs')) ? TRUE : FALSE;
-      break;
-  }
-  
-  if ($allowed) {
+  if (user_access('delete sms message')) {
     $sid = is_object($sid) ? $sid->sid : $sid;
-    db_query("DELETE FROM {sms_messages} WHERE sid = %d", $sid);
+    db_query("DELETE FROM {smses} WHERE sid = %d", $sid);
     drupal_set_message(t('The SMS message logs has been successfully deleted.'), 'status', FALSE);
   }
   else {
-    drupal_set_message(t('You have not enough permission to delete the SMS message log.'), 'error', FALSE);
+    drupal_set_message(t('You have not enough permission to delete the SMS message.'), 'error', FALSE);
   }
 }
 
@@ -142,6 +132,8 @@ function sms_delete($sid) {
  *   The sid of the SMS message or an array of conditions to match against.
  * @param $flush
  *   Whether to flush the internal cache.
+ * @param $fields
+ *   An array of database field names to retrieve.
  *
  * @return
  *   The loaded SMS object or an array of SMS objects or FALSE on fail.
@@ -149,7 +141,7 @@ function sms_delete($sid) {
  * @todo
  *   Extend to be able to match other conditions.
  */
-function sms_load($params = array(), $flush = FALSE) { 
+function sms_load($params = array(), $fields = array(), $flush = FALSE) { 
   static $cache = array();
   
   // Flush the internal cache, if set so.
@@ -185,10 +177,18 @@ function sms_load($params = array(), $flush = FALSE) {
     return FALSE;
   }
   
+  // Preparing fields to be retrieved.
+  if (empty($fields) || !is_array($fields)) {
+    $fields = '*';
+  }
+  else {
+    $fields = implode(',', $fields);
+  }
+  
   // Get and iterate through the results.
   $sms = array();
   $conditions = $conditions ? $conditions : 'TRUE';
-  $results = db_query("SELECT * FROM {sms_messages} WHERE " . $conditions, $arguments);
+  $results = db_query("SELECT $fields FROM {smses} WHERE $conditions", $arguments);
 
   while ($sms_object = db_fetch_object($results)) {
     $sms[] = $sms_object;
@@ -208,5 +208,21 @@ function sms_load($params = array(), $flush = FALSE) {
   $cache[$sms->sid] = $sms;
   
   return $sms;
+}
+
+/**
+ * Helper function to build a title for a SMS message.
+ *
+ * @param $sid
+ *   SMS identifier or object.
+ *
+ * @return
+ *   SMS message title.
+ */
+function sms_title($sid){
+  if (is_object($sid)) {
+    $sid = $sid->sid;
+  }
+  return t('SMS Message') . ' #' . $sid;
 }
 
