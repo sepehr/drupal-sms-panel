@@ -1,0 +1,36 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * SMS Panel UI Datepicker hook implementations.
+ */
+
+/**
+ * Implementation of hook_form_alter().
+ */
+function sms_panel_ui_datepicker_form_alter(&$form, $form_state, $form_id) {
+  $views_to_alter = array(
+    'sms_panel_incoming',
+    'sms_panel_outgoing',
+  );
+  
+  // Include the datepicker widget.
+  if (in_array($form_state['view']->name, $views_to_alter) && isset($form['timestamp'])) {
+    // Adding jQuery UI Datepicker theme.
+    // TODO: Make themes customizable in the UI config.
+    drupal_add_css(drupal_get_path('module', 'sms_panel_ui_datepicker') . '/css/sms-panel-ui.datepicker.css', 'module');
+    
+    // Change the field type to a Date Popup,
+    // Also setting options specific to Date Popup.
+    $form['timestamp']['#type'] = 'date_popup';
+    $year_range = variable_get('sms_panel_ui_datepicker_year_range', 3);
+    $form['timestamp']['#date_year_range'] = '-' . $year_range . ':+' . $year_range;
+    $form['timestamp']['#date_format'] = variable_get('sms_panel_ui_datepicker_date_format', 'Y-m-d H:i:s');
+    
+    // Unset unnecessary field options.
+    unset($form['timestamp']['#maxlength']);
+    unset($form['timestamp']['#description']);
+  }
+}
+

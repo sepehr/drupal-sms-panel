@@ -1,0 +1,28 @@
+/* $Id$ */
+
+/**
+ * @file
+ * The SMS page styles.
+ */
+
+#sms-panel-ui-form-sms-info {
+  position: relative;
+}
+#sms-panel-ui-form-sms-info .form-item-labeled label {
+  float: left;
+  margin-right: 5px;
+}
+#sms-panel-ui-form-sms-info .sms-info-message-wrapper {
+  float: right;  
+  margin-right: 10%;  
+  position: absolute;
+  right: 20px;
+  top: 80px;
+  width: 40%;
+  
+}
+#sms-panel-ui-form-sms-info .sms-info-message {
+  border: 1px solid #eee;
+  font: italic 16px Georgia;
+  padding: 10px;
+}

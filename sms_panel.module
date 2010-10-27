@@ -219,7 +219,7 @@ function sms_load($params = array(), $fields = array(), $flush = FALSE) {
  * @return
  *   SMS message title.
  */
-function sms_title($sid){
+function sms_title($sid) {
   if (is_object($sid)) {
     $sid = $sid->sid;
   }

@@ -11,7 +11,8 @@
  */
 function sms_panel_views_views_data() {
   $data = array();
-
+  
+  // Introducing {smses} table.
   $data['smses']['table']['group'] = t('SMS');
   
   $data['smses']['table']['base'] = array(
@@ -44,6 +45,12 @@ function sms_panel_views_views_data() {
     'field' => array(
       'handler' => 'sms_panel_views_handler_field_user',
       'click sortable' => TRUE,
+    ),
+    'relationship' => array(
+      'handler' => 'views_handler_relationship',
+      'base' => 'users',
+      'base field' => 'uid',
+      'label' => t('user'),
     ),
     'sort' => array(
       'handler' => 'views_handler_sort',
@@ -145,6 +152,53 @@ function sms_panel_views_views_data() {
       'title' => t('Delete Link'),
       'help' => t('Provide a link to delete the SMS message.'),
       'handler' => 'sms_panel_views_handler_field_sms_link_delete',
+    ),
+  );
+  
+  // Introducing {sms_user} table,
+  // on behalf of sms_user.module, Views your majesty!
+  $data['sms_user']['table']['group'] = t('SMS User');
+  
+  $data['sms_user']['table']['base'] = array(
+    'field' => 'uid',
+    'title' => t('SMS User'),
+    'help' => t('Registered users who filled their cell number.'),
+  );
+  
+  $data['sms_user']['table']['join'] = array(
+    'users' => array(
+      'left_field' => 'uid',
+      'field' => 'uid',
+    ),
+  );
+  
+  $data['sms_user']['number'] = array(
+    'title' => t('User mobile number'),
+    'help' => t('The mobile phone number of the user.'),
+    'field' => array(
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE,
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_string',
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+  );
+  
+  $data['sms_user']['status'] = array(
+    'title' => t('User mobile number status'),
+    'help' => t('The status of the user mobile phone number.'),
+    'field' => array(
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE,
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter',
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
     ),
   );
   

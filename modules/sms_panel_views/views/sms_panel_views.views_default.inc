@@ -20,8 +20,17 @@ function sms_panel_views_views_default_views() {
   $view->is_cacheable = FALSE;
   $view->api_version = 2;
   $view->disabled = FALSE;
-  
   $handler = $view->new_display('default', 'Defaults', 'default');
+  $handler->override_option('relationships', array(
+    'uid' => array(
+      'label' => 'user',
+      'required' => 0,
+      'id' => 'uid',
+      'table' => 'smses',
+      'field' => 'uid',
+      'relationship' => 'none',
+    ),
+  ));
   $handler->override_option('fields', array(
     'sid' => array(
       'label' => 'ID',
@@ -59,7 +68,7 @@ function sms_panel_views_views_default_views() {
       'relationship' => 'none',
     ),
     'number' => array(
-      'label' => 'Sender',
+      'label' => 'Sender number',
       'alter' => array(
         'alter_text' => 0,
         'text' => '',
@@ -118,7 +127,7 @@ function sms_panel_views_views_default_views() {
       'relationship' => 'none',
     ),
     'nothing' => array(
-      'label' => 'Reciever',
+      'label' => 'Recipient',
       'alter' => array(
         'text' => 'System',
         'make_link' => 0,
@@ -146,7 +155,7 @@ function sms_panel_views_views_default_views() {
       'relationship' => 'none',
     ),
     'timestamp' => array(
-      'label' => 'Send Date',
+      'label' => 'Recieve Date',
       'alter' => array(
         'alter_text' => 0,
         'text' => '',
@@ -168,7 +177,7 @@ function sms_panel_views_views_default_views() {
       'empty' => '',
       'hide_empty' => 0,
       'empty_zero' => 0,
-      'date_format' => 'large',
+      'date_format' => 'medium',
       'custom_date_format' => '',
       'exclude' => 0,
       'id' => 'timestamp',
@@ -266,7 +275,6 @@ function sms_panel_views_views_default_views() {
       'relationship' => 'none',
     ),
   ));
-  
   $handler->override_option('sorts', array(
     'timestamp' => array(
       'order' => 'DESC',
@@ -277,22 +285,7 @@ function sms_panel_views_views_default_views() {
       'relationship' => 'none',
     ),
   ));
-  
   $handler->override_option('filters', array(
-    'direction' => array(
-      'operator' => '=',
-      'value' => '0',
-      'group' => '0',
-      'exposed' => FALSE,
-      'expose' => array(
-        'operator' => FALSE,
-        'label' => '',
-      ),
-      'id' => 'direction',
-      'table' => 'smses',
-      'field' => 'direction',
-      'relationship' => 'none',
-    ),
     'uid' => array(
       'operator' => 'in',
       'value' => '',
@@ -302,7 +295,7 @@ function sms_panel_views_views_default_views() {
         'use_operator' => 0,
         'operator' => 'uid_op',
         'identifier' => 'uid',
-        'label' => 'Sender',
+        'label' => 'Sender number',
         'optional' => 1,
         'remember' => 0,
         'reduce' => 0,
@@ -331,25 +324,6 @@ function sms_panel_views_views_default_views() {
       'field' => 'message',
       'relationship' => 'none',
     ),
-    'number' => array(
-      'operator' => 'contains',
-      'value' => '',
-      'group' => '0',
-      'exposed' => TRUE,
-      'expose' => array(
-        'use_operator' => 0,
-        'operator' => 'number_op',
-        'identifier' => 'number',
-        'label' => 'Reciver',
-        'optional' => 1,
-        'remember' => 0,
-      ),
-      'case' => 0,
-      'id' => 'number',
-      'table' => 'smses',
-      'field' => 'number',
-      'relationship' => 'none',
-    ),
     'gateway' => array(
       'operator' => '=',
       'value' => '',
@@ -370,7 +344,7 @@ function sms_panel_views_views_default_views() {
       'relationship' => 'none',
     ),
     'timestamp' => array(
-      'operator' => '=',
+      'operator' => '>=',
       'value' => array(
         'type' => 'date',
         'value' => '',
@@ -380,10 +354,10 @@ function sms_panel_views_views_default_views() {
       'group' => '0',
       'exposed' => TRUE,
       'expose' => array(
-        'use_operator' => 1,
+        'use_operator' => 0,
         'operator' => 'timestamp_op',
         'identifier' => 'timestamp',
-        'label' => 'Send Date',
+        'label' => 'Recieve Date',
         'optional' => 1,
         'remember' => 0,
       ),
@@ -392,18 +366,31 @@ function sms_panel_views_views_default_views() {
       'field' => 'timestamp',
       'relationship' => 'none',
     ),
+    'direction' => array(
+      'operator' => '=',
+      'value' => '0',
+      'group' => '0',
+      'exposed' => FALSE,
+      'expose' => array(
+        'operator' => FALSE,
+        'label' => '',
+      ),
+      'id' => 'direction',
+      'table' => 'smses',
+      'field' => 'direction',
+      'relationship' => 'none',
+    ),
   ));
-  
   $handler->override_option('access', array(
     'type' => 'perm',
     'perm' => 'view incoming message list',
   ));
-  
   $handler->override_option('cache', array(
     'type' => 'none',
   ));
-  
   $handler->override_option('title', 'Incoming SMS messages');
+  $handler->override_option('empty', 'No incoming SMS messages found.');
+  $handler->override_option('empty_format', '1');
   $handler->override_option('use_ajax', TRUE);
   $handler->override_option('use_pager', '1');
   $handler->override_option('style_plugin', 'table');
@@ -452,7 +439,6 @@ function sms_panel_views_views_default_views() {
     ),
     'default' => '-1',
   ));
-  
   $handler = $view->new_display('page', 'Page', 'page_1');
   $handler->override_option('path', 'admin/smsframework/panel/incoming');
   $handler->override_option('menu', array(
@@ -462,7 +448,6 @@ function sms_panel_views_views_default_views() {
     'weight' => '2',
     'name' => 'navigation',
   ));
-  
   $handler->override_option('tab_options', array(
     'type' => 'none',
     'title' => '',
@@ -485,6 +470,16 @@ function sms_panel_views_views_default_views() {
   $view->api_version = 2;
   $view->disabled = FALSE;
   $handler = $view->new_display('default', 'Defaults', 'default');
+  $handler->override_option('relationships', array(
+    'uid' => array(
+      'label' => 'user',
+      'required' => 1,
+      'id' => 'uid',
+      'table' => 'smses',
+      'field' => 'uid',
+      'relationship' => 'none',
+    ),
+  ));
   $handler->override_option('fields', array(
     'sid' => array(
       'label' => 'ID',
@@ -521,7 +516,7 @@ function sms_panel_views_views_default_views() {
       'field' => 'sid',
       'relationship' => 'none',
     ),
-    'uid' => array(
+    'name' => array(
       'label' => 'Sender',
       'alter' => array(
         'alter_text' => 0,
@@ -545,11 +540,13 @@ function sms_panel_views_views_default_views() {
       'hide_empty' => 0,
       'empty_zero' => 0,
       'link_to_user' => 1,
+      'overwrite_anonymous' => 0,
+      'anonymous_text' => '',
       'exclude' => 0,
-      'id' => 'uid',
-      'table' => 'smses',
-      'field' => 'uid',
-      'relationship' => 'none',
+      'id' => 'name',
+      'table' => 'users',
+      'field' => 'name',
+      'relationship' => 'uid',
     ),
     'message' => array(
       'label' => 'Message',
@@ -581,7 +578,7 @@ function sms_panel_views_views_default_views() {
       'relationship' => 'none',
     ),
     'number' => array(
-      'label' => 'Reciever',
+      'label' => 'Recipient',
       'alter' => array(
         'alter_text' => 0,
         'text' => '',
@@ -603,6 +600,7 @@ function sms_panel_views_views_default_views() {
       'empty' => '',
       'hide_empty' => 0,
       'empty_zero' => 0,
+      'link_user_number' => 1,
       'exclude' => 0,
       'id' => 'number',
       'table' => 'smses',
@@ -632,7 +630,7 @@ function sms_panel_views_views_default_views() {
       'empty' => '',
       'hide_empty' => 0,
       'empty_zero' => 0,
-      'date_format' => 'large',
+      'date_format' => 'medium',
       'custom_date_format' => '',
       'exclude' => 0,
       'id' => 'timestamp',
@@ -741,20 +739,6 @@ function sms_panel_views_views_default_views() {
     ),
   ));
   $handler->override_option('filters', array(
-    'direction' => array(
-      'operator' => '=',
-      'value' => '1',
-      'group' => '0',
-      'exposed' => FALSE,
-      'expose' => array(
-        'operator' => FALSE,
-        'label' => '',
-      ),
-      'id' => 'direction',
-      'table' => 'smses',
-      'field' => 'direction',
-      'relationship' => 'none',
-    ),
     'uid' => array(
       'operator' => 'in',
       'value' => '',
@@ -764,34 +748,34 @@ function sms_panel_views_views_default_views() {
         'use_operator' => 0,
         'operator' => 'uid_op',
         'identifier' => 'uid',
-        'label' => 'Sender',
+        'label' => 'Sender user',
         'optional' => 1,
         'remember' => 0,
         'reduce' => 0,
       ),
       'id' => 'uid',
-      'table' => 'smses',
+      'table' => 'users',
       'field' => 'uid',
-      'relationship' => 'none',
+      'relationship' => 'uid',
     ),
-    'message' => array(
-      'operator' => 'contains',
+    'number_1' => array(
+      'operator' => '=',
       'value' => '',
       'group' => '0',
       'exposed' => TRUE,
       'expose' => array(
         'use_operator' => 0,
-        'operator' => 'message_op',
-        'identifier' => 'message',
-        'label' => 'Message',
+        'operator' => 'number_1_op',
+        'identifier' => 'number_1',
+        'label' => 'Sender number',
         'optional' => 1,
         'remember' => 0,
       ),
       'case' => 0,
-      'id' => 'message',
-      'table' => 'smses',
-      'field' => 'message',
-      'relationship' => 'none',
+      'id' => 'number_1',
+      'table' => 'sms_user',
+      'field' => 'number',
+      'relationship' => 'uid',
     ),
     'number' => array(
       'operator' => 'contains',
@@ -802,7 +786,7 @@ function sms_panel_views_views_default_views() {
         'use_operator' => 0,
         'operator' => 'number_op',
         'identifier' => 'number',
-        'label' => 'Reciver',
+        'label' => 'Recipient number',
         'optional' => 1,
         'remember' => 0,
       ),
@@ -810,6 +794,28 @@ function sms_panel_views_views_default_views() {
       'id' => 'number',
       'table' => 'smses',
       'field' => 'number',
+      'relationship' => 'none',
+      'override' => array(
+        'button' => 'Override',
+      ),
+    ),
+    'message' => array(
+      'operator' => 'contains',
+      'value' => '',
+      'group' => '0',
+      'exposed' => TRUE,
+      'expose' => array(
+        'use_operator' => 0,
+        'operator' => 'message_op',
+        'identifier' => 'message',
+        'label' => 'Message contains',
+        'optional' => 1,
+        'remember' => 0,
+      ),
+      'case' => 0,
+      'id' => 'message',
+      'table' => 'smses',
+      'field' => 'message',
       'relationship' => 'none',
     ),
     'gateway' => array(
@@ -832,7 +838,7 @@ function sms_panel_views_views_default_views() {
       'relationship' => 'none',
     ),
     'timestamp' => array(
-      'operator' => '=',
+      'operator' => '>=',
       'value' => array(
         'type' => 'date',
         'value' => '',
@@ -842,7 +848,7 @@ function sms_panel_views_views_default_views() {
       'group' => '0',
       'exposed' => TRUE,
       'expose' => array(
-        'use_operator' => 1,
+        'use_operator' => 0,
         'operator' => 'timestamp_op',
         'identifier' => 'timestamp',
         'label' => 'Send Date',
@@ -852,6 +858,23 @@ function sms_panel_views_views_default_views() {
       'id' => 'timestamp',
       'table' => 'smses',
       'field' => 'timestamp',
+      'relationship' => 'none',
+      'override' => array(
+        'button' => 'Override',
+      ),
+    ),
+    'direction' => array(
+      'operator' => '=',
+      'value' => '1',
+      'group' => '0',
+      'exposed' => FALSE,
+      'expose' => array(
+        'operator' => FALSE,
+        'label' => '',
+      ),
+      'id' => 'direction',
+      'table' => 'smses',
+      'field' => 'direction',
       'relationship' => 'none',
     ),
   ));
@@ -863,6 +886,8 @@ function sms_panel_views_views_default_views() {
     'type' => 'none',
   ));
   $handler->override_option('title', 'Outgoing SMS messages');
+  $handler->override_option('empty', 'No outgoing SMS messages found.');
+  $handler->override_option('empty_format', '1');
   $handler->override_option('use_ajax', TRUE);
   $handler->override_option('use_pager', '1');
   $handler->override_option('style_plugin', 'table');
@@ -873,21 +898,26 @@ function sms_panel_views_views_default_views() {
     'order' => 'desc',
     'columns' => array(
       'sid' => 'sid',
-      'uid' => 'uid',
+      'name' => 'name',
+      'number_1' => 'name',
       'message' => 'message',
       'number' => 'number',
       'timestamp' => 'timestamp',
       'gateway' => 'gateway',
-      'delete_sms' => 'delete_sms',
       'view_sms' => 'delete_sms',
+      'delete_sms' => 'delete_sms',
     ),
     'info' => array(
       'sid' => array(
         'sortable' => 1,
         'separator' => '',
       ),
-      'uid' => array(
-        'sortable' => 1,
+      'name' => array(
+        'sortable' => 0,
+        'separator' => ' - ',
+      ),
+      'number_1' => array(
+        'sortable' => 0,
         'separator' => '',
       ),
       'message' => array(
@@ -903,11 +933,11 @@ function sms_panel_views_views_default_views() {
       'gateway' => array(
         'separator' => '',
       ),
-      'delete_sms' => array(
-        'separator' => ' | ',
-      ),
       'view_sms' => array(
         'separator' => '',
+      ),
+      'delete_sms' => array(
+        'separator' => ' | ',
       ),
     ),
     'default' => '-1',

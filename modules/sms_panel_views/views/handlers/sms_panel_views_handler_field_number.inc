@@ -42,7 +42,7 @@ class sms_panel_views_handler_field_number extends views_handler_field {
       $uid = sms_user_get_uid($values->{$this->aliases['number']});
       if ($uid) {
         $this->options['alter']['make_link'] = TRUE;
-        $this->options['alter']['path'] = "user/" . $uid;
+        $this->options['alter']['path'] = 'user/' . $uid;
       }
     }
     return $values->{$this->aliases['number']};
