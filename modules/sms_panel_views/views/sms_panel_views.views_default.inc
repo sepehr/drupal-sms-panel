@@ -10,7 +10,9 @@
  * Implementation of hook_views_default_views().
  */
 function sms_panel_views_views_default_views() {
-  // sms_incoming default view.
+  /**
+   * sms_incoming default view.
+   */
   $view = new view;
   $view->name = 'sms_panel_incoming';
   $view->description = 'Incoming SMS messages.';
@@ -286,6 +288,20 @@ function sms_panel_views_views_default_views() {
     ),
   ));
   $handler->override_option('filters', array(
+    'direction' => array(
+      'operator' => '=',
+      'value' => '0',
+      'group' => '0',
+      'exposed' => FALSE,
+      'expose' => array(
+        'operator' => FALSE,
+        'label' => '',
+      ),
+      'id' => 'direction',
+      'table' => 'smses',
+      'field' => 'direction',
+      'relationship' => 'none',
+    ),
     'uid' => array(
       'operator' => 'in',
       'value' => '',
@@ -356,28 +372,43 @@ function sms_panel_views_views_default_views() {
       'expose' => array(
         'use_operator' => 0,
         'operator' => 'timestamp_op',
-        'identifier' => 'timestamp',
-        'label' => 'Recieve Date',
+        'identifier' => 'timestamp_start',
+        'label' => 'Start Date',
         'optional' => 1,
         'remember' => 0,
       ),
       'id' => 'timestamp',
       'table' => 'smses',
       'field' => 'timestamp',
+      'override' => array(
+        'button' => 'Override',
+      ),
       'relationship' => 'none',
     ),
-    'direction' => array(
-      'operator' => '=',
-      'value' => '0',
-      'group' => '0',
-      'exposed' => FALSE,
-      'expose' => array(
-        'operator' => FALSE,
-        'label' => '',
+    'timestamp_1' => array(
+      'operator' => '<',
+      'value' => array(
+        'type' => 'date',
+        'value' => '',
+        'min' => '',
+        'max' => '',
       ),
-      'id' => 'direction',
+      'group' => '0',
+      'exposed' => TRUE,
+      'expose' => array(
+        'use_operator' => 0,
+        'operator' => 'timestamp_1_op',
+        'identifier' => 'timestamp_end',
+        'label' => 'End Date',
+        'optional' => 1,
+        'remember' => 0,
+      ),
+      'id' => 'timestamp_1',
       'table' => 'smses',
-      'field' => 'direction',
+      'field' => 'timestamp',
+      'override' => array(
+        'button' => 'Override',
+      ),
       'relationship' => 'none',
     ),
   ));
@@ -459,7 +490,9 @@ function sms_panel_views_views_default_views() {
   $views[$view->name] = $view;
   
   
-  // sms_outgoing default view.
+  /**
+   * sms_outgoing default view.
+   */
   $view = new view;
   $view->name = 'sms_panel_outgoing';
   $view->description = 'Outgoing SMS messages.';
@@ -739,6 +772,20 @@ function sms_panel_views_views_default_views() {
     ),
   ));
   $handler->override_option('filters', array(
+    'direction' => array(
+      'operator' => '=',
+      'value' => '1',
+      'group' => '0',
+      'exposed' => FALSE,
+      'expose' => array(
+        'operator' => FALSE,
+        'label' => '',
+      ),
+      'id' => 'direction',
+      'table' => 'smses',
+      'field' => 'direction',
+      'relationship' => 'none',
+    ),
     'uid' => array(
       'operator' => 'in',
       'value' => '',
@@ -850,8 +897,8 @@ function sms_panel_views_views_default_views() {
       'expose' => array(
         'use_operator' => 0,
         'operator' => 'timestamp_op',
-        'identifier' => 'timestamp',
-        'label' => 'Send Date',
+        'identifier' => 'timestamp_start',
+        'label' => 'Start Date',
         'optional' => 1,
         'remember' => 0,
       ),
@@ -859,22 +906,28 @@ function sms_panel_views_views_default_views() {
       'table' => 'smses',
       'field' => 'timestamp',
       'relationship' => 'none',
-      'override' => array(
-        'button' => 'Override',
-      ),
     ),
-    'direction' => array(
-      'operator' => '=',
-      'value' => '1',
-      'group' => '0',
-      'exposed' => FALSE,
-      'expose' => array(
-        'operator' => FALSE,
-        'label' => '',
+    'timestamp_1' => array(
+      'operator' => '<',
+      'value' => array(
+        'type' => 'date',
+        'value' => '',
+        'min' => '',
+        'max' => '',
       ),
-      'id' => 'direction',
+      'group' => '0',
+      'exposed' => TRUE,
+      'expose' => array(
+        'use_operator' => 0,
+        'operator' => 'timestamp_1_op',
+        'identifier' => 'timestamp_end',
+        'label' => 'End Date',
+        'optional' => 1,
+        'remember' => 0,
+      ),
+      'id' => 'timestamp_1',
       'table' => 'smses',
-      'field' => 'direction',
+      'field' => 'timestamp',
       'relationship' => 'none',
     ),
   ));
@@ -961,7 +1014,9 @@ function sms_panel_views_views_default_views() {
   
   $views[$view->name] = $view;
   
-  // Return both views.
+  /**
+   * Return both views.
+   */
   return $views;
 }
 
