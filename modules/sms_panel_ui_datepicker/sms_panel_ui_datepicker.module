@@ -16,21 +16,26 @@ function sms_panel_ui_datepicker_form_alter(&$form, $form_state, $form_id) {
   );
   
   // Include the datepicker widget.
-  if (in_array($form_state['view']->name, $views_to_alter) && isset($form['timestamp'])) {
-    // Adding jQuery UI Datepicker theme.
-    // TODO: Make themes customizable in the UI config.
+  if (in_array($form_state['view']->name, $views_to_alter)) {
+    // TODO: Make datepicker skins customizable via the UI.
     drupal_add_css(drupal_get_path('module', 'sms_panel_ui_datepicker') . '/css/sms-panel-ui.datepicker.css', 'module');
     
-    // Change the field type to a Date Popup,
-    // Also setting options specific to Date Popup.
-    $form['timestamp']['#type'] = 'date_popup';
-    $year_range = variable_get('sms_panel_ui_datepicker_year_range', 3);
-    $form['timestamp']['#date_year_range'] = '-' . $year_range . ':+' . $year_range;
-    $form['timestamp']['#date_format'] = variable_get('sms_panel_ui_datepicker_date_format', 'Y-m-d H:i:s');
-    
-    // Unset unnecessary field options.
-    unset($form['timestamp']['#maxlength']);
-    unset($form['timestamp']['#description']);
+    // TODO: Build the UI and make these all configurable.
+    $date_range = variable_get('sms_panel_ui_datepicker_year_range', 3);
+    $date_format = variable_get('sms_panel_ui_datepicker_date_format', 'Y-m-d H:i:s');
+    foreach ($form as $key => $value) {
+      if (strpos($key, 'timestamp') === FALSE) {
+        continue;
+      }
+      
+      $form[$key]['#type'] = 'date_popup';
+      $form[$key]['#date_format'] = $date_format;
+      $form[$key]['#date_year_range'] = '-' . $date_range . ':+' . $date_range;
+      
+      // Unset unnecessary field options.
+      unset($form[$key]['#maxlength']);
+      unset($form[$key]['#description']);
+    }
   }
 }
 
