@@ -49,7 +49,7 @@ function sms_panel_perm() {
  *   - response: The response of gateway's send callback.
  */
 function sms_panel_sms_send_alter(&$outgoing, $op) {
-  if ($op == 'pre send' && !user_access('send sms message')) {
+  if ($op == 'pre send' && strpos($outgoing['message'], t('confirmation')) === FALSE && !user_access('send sms message')) {
     drupal_set_message(t('You have not enough permission to send SMS messages.'), 'error', FALSE);
     
     // TODO: Just change the following lines!
