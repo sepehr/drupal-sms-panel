@@ -74,9 +74,9 @@ function sms_panel_sms_send_alter(&$outgoing, $op) {
 }
 
 /**
- * Implementation of hook_SMS_PANEL_INcoming().
+ * Implementation of hook_sms_incoming().
  */
-function sms_panel_sms_panel_incoming($op, $number, $message, $options) {
+function sms_panel_sms_incoming($op, $number, $message, $options) {
   if ($op == 'post process') {
     $sms = new stdClass();
     $sms->uid = 0;
