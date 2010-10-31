@@ -79,13 +79,15 @@ function sms_panel_sms_send_alter(&$outgoing, $op) {
 function sms_panel_sms_incoming($op, $number, $message, $options) {
   if ($op == 'post process') {
     $sms = new stdClass();
+    $gateway = sms_default_gateway();
+    
     $sms->uid = 0;
     $sms->number = $number;
     $sms->timestamp = time();
     $sms->message = $message;
     $sms->direction = SMS_PANEL_IN;
-    $sms->gateway = sms_default_gateway();
-    
+    $sms->gateway = $gateway['identifier'];
+
     sms_save($sms);
   }
 }
