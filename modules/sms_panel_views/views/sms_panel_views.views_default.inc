@@ -70,7 +70,7 @@ function sms_panel_views_views_default_views() {
       'relationship' => 'none',
     ),
     'number' => array(
-      'label' => 'Sender number',
+      'label' => 'Sender',
       'alter' => array(
         'alter_text' => 0,
         'text' => '',
@@ -98,6 +98,9 @@ function sms_panel_views_views_default_views() {
       'table' => 'smses',
       'field' => 'number',
       'relationship' => 'none',
+      'override' => array(
+        'button' => 'Override',
+      ),
     ),
     'message' => array(
       'label' => 'Message',
