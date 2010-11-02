@@ -10,9 +10,9 @@
  * Implementation of hook_enable().
  */
 function sms_panel_ui_enable() {
-  drupal_set_message(st('The !ui has been successfully enabled.',
+  drupal_set_message(st('The <a href="!link">SMS Panel UI</a> has been successfully enabled.',
     array(
-      '!ui' => l('SMS Panel UI', 'admin/smsframework/panel'),
+      '!link' => url('admin/smsframework/panel'),
     )
   ));
 }

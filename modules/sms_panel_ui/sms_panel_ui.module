@@ -16,17 +16,38 @@ function sms_panel_ui_menu() {
     'title' => 'SMS Management Panel',
     'description' => 'Central control panel for managing SMS messages.',
     'access arguments' => array('administer sms panel'),
-    'type' => MENU_NORMAL_ITEM,
   );
   
   $items['admin/smsframework/panel/dashboard'] = array(
     'title' => 'Dashboard',
-    'description' => 'Overall of site SMS messagings.',
+    'description' => 'Overall view of site SMS messaging activities.',
 #    'page callback' => 'sms_panel_ui_page_dashboard',
     'access arguments' => array('administer sms panel'),
     'file' => 'sms_panel_ui.inc',
     'weight' => 0,
     'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+  
+  $items['admin/smsframework/panel/compose'] = array(
+    'title' => 'Compose',
+    'description' => 'Compose a new SMS message.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('sms_panel_ui_form_sms_send'),
+    'access arguments' => array('send sms message'),
+    'file' => 'sms_panel_ui.inc',
+    'weight' => 3,
+    'type' => MENU_LOCAL_TASK,
+  );
+  
+  $items['admin/smsframework/panel/configure'] = array(
+    'title' => 'Configuration',
+    'description' => 'Configure SMS Panel options.',
+#    'page callback' => 'drupal_get_form',
+#    'page arguments' => array('sms_panel_ui_form_configure'),
+    'access arguments' => array('administer sms panel'),
+    'file' => 'sms_panel_ui.inc',
+    'weight' => 4,
+    'type' => MENU_LOCAL_TASK,
   );
   
   $items['admin/smsframework/panel/sms/%sms'] = array(
@@ -51,7 +72,7 @@ function sms_panel_ui_menu() {
     'page arguments' => array('sms_panel_ui_sms_delete_confirm', 4),
     'access arguments' => array('delete sms message'),
     'file' => 'sms_panel_ui.inc',
-    'weight' => 2,
+    'weight' => 3,
     'type' => MENU_LOCAL_TASK,
   );
   
@@ -71,11 +92,16 @@ function sms_panel_ui_menu() {
     'type' => MENU_CALLBACK,    
   );
   
+  // Outgoing and Incoming menus
+  // will be created via Views, your majesty!
+  
   return $items;
 }
 
 /**
  * Implementation of hook_form_alter().
+ *
+ * Alters exposed forms as needed.
  */
 function sms_panel_ui_form_alter(&$form, $form_state, $form_id) {
   $views_to_alter = array(
@@ -91,16 +117,16 @@ function sms_panel_ui_form_alter(&$form, $form_state, $form_id) {
   );
   
   if (in_array($form_state['view']->name, $views_to_alter)) {
+    // Adding exposed form CSS hacks.
+    drupal_add_css(drupal_get_path('module', 'sms_panel_ui') . '/css/views-exposed-in-fieldset.css', 'module');
+      
     // Set autocomplete widgets.
     foreach ($autocomplete_widgets as $field => $handler) {
       $form[$field]['#autocomplete_path'] = $handler;
     }
     
     // Wrap views exposed filter fields in a fieldset.
-    if (!module_exists('views_exposed_in_fieldset')) {
-      // Add the CSS file.
-      drupal_add_css(drupal_get_path('module', 'sms_panel_ui') . '/css/views-exposed-in-fieldset.css', 'module');
-      
+    if (!module_exists('views_exposed_in_fieldset')) {            
       // Prepare the form and fields.
       $fieldset = $form_id . '_fieldset';
       $fields = element_children($form);

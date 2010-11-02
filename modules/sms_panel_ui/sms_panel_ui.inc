@@ -45,6 +45,52 @@ function sms_panel_ui_theme_number($number, $show_username) {
 }
 
 /**
+ * Form callback for SMS message sending.
+ *
+ * @ingroup forms
+ */
+function sms_panel_ui_form_sms_send() {
+  $form = sms_send_form();
+  
+  $form['message'] = array(
+    '#type' => 'textarea',
+    '#title' => t('SMS Message'),
+    '#description' => t('SMS text message to send.'),
+  );
+  
+  $form['number']['#autocomplete_path'] = 'sms/number/autocomplete';
+  
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Send'),
+  );
+  
+  return $form;
+}
+
+/**
+ * Form validation callback for SMS message sending.
+ */
+function sms_panel_ui_form_sms_send_validate($form, &$form_state) {
+  // TODO: Validate the number using the smsframework's
+  // sms_validate_number() when it's fixed in its coming verison.
+  if ($form_state['values']['number'] != sms_formatter($form_state['values']['number'])) {
+    form_set_error('number', t('Please enter a valid phone number.'));
+  }
+  
+  if (empty($form_state['values']['message'])) {
+    form_set_error('message', t('Please fill out the SMS message.'));
+  }
+}
+
+/**
+ * Form submission callback for SMS message sending.
+ */
+function sms_panel_ui_form_sms_send_submit($form, &$form_state) {
+  sms_send($form_state['values']['number'], $form_state['values']['message']);
+}
+
+/**
  * Form callback for SMS message info page.
  *
  * @param $sms
@@ -52,6 +98,8 @@ function sms_panel_ui_theme_number($number, $show_username) {
  *
  * @return
  *   The form.
+ *
+ * @ingroup forms
  */
 function sms_panel_ui_form_sms_info(&$form_state, $sms) {
   $form = array();
@@ -70,15 +118,13 @@ function sms_panel_ui_form_sms_info(&$form_state, $sms) {
     '#value' => $sms->sid,
   );      
   
-  if ($sms->direction) {
-    $sender = user_load($sms->uid);
-    $form['sms_info']['sms_info_user'] = array(
-      '#type' => 'item',
-      '#title' => t('Sender'),
-      '#value' => l($sender->name, 'user/' . $sender->uid),
-    );
-  }
-  
+  $sms_user = $sms->uid ? user_load($sms->uid) : t('System');
+  $form['sms_info']['sms_info_user'] = array(
+    '#type' => 'item',
+    '#title' => is_object($sms_user) ? t('Sender') : t('Recipient'),
+    '#value' => is_object($sms_user) ? l($sms_user->name, 'user/' . $sms_user->uid) : $sms_user,
+  );
+    
   $form['sms_info']['sms_info_number'] = array(
     '#type' => 'item',
     '#title' => $sms->direction ? t('Recipient') : t('Sender'),
@@ -93,13 +139,13 @@ function sms_panel_ui_form_sms_info(&$form_state, $sms) {
   
   $form['sms_info']['sms_info_timestamp'] = array(
     '#type' => 'item',
-    '#title' => $sms->direction ? t('Sent Date') : t('Recieve Date'),
+    '#title' => $sms->direction ? t('Sent Date') : t('Receive Date'),
     '#value' => format_date($sms->timestamp, 'long'),
   );
   
   $form['sms_info']['sms_info_gateway'] = array(
     '#type' => 'item',
-    '#title' => $sms->direction ? t('Sent through') : t('Recieved via'),
+    '#title' => $sms->direction ? t('Sent through') : t('Received via'),
     '#value' => $sms->gateway . ' ' . t('gateway'),
   );
   
@@ -110,11 +156,24 @@ function sms_panel_ui_form_sms_info(&$form_state, $sms) {
     '#suffix' => '</div>',
   );
   
-  $form['buttons']['resend'] = array(
-    '#type' => 'button',
-    '#value' => t('Resend'),
-  );
+  if ($sms->direction) {
+    $form['buttons']['resend'] = array(
+      '#type' => 'button',
+      '#value' => t('Resend'),
+    );
+  }
+  else {
+    $form['buttons']['reply'] = array(
+      '#type' => 'button',
+      '#value' => t('Reply'),
+    );
+  }
   
+  $form['buttons']['forward'] = array(
+    '#type' => 'button',
+    '#value' => t('Forward'),
+  );
+    
   $form['buttons']['delete'] = array(
     '#type' => 'button',
     '#value' => t('Delete'),
@@ -134,6 +193,14 @@ function sms_panel_ui_form_sms_info_validate($form, &$form_state) {
       exit();
     
     case 'Resend':
+      
+      break;
+      
+    case 'Reply':
+      
+      break;
+      
+    case 'Forward':
       
       break;
   }
