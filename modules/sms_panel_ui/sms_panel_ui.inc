@@ -47,18 +47,49 @@ function sms_panel_ui_theme_number($number, $show_username) {
 /**
  * Form callback for SMS message sending.
  *
+ * @param $form_state
+ *   The form state.
+ * @param $number
+ *   Phone number to be prepopulated.
+ * @param $message
+ *   SMS message text to be prepopulated.
+ *
+ * @todo
+ *   Add Token integration.
+ *
  * @ingroup forms
  */
-function sms_panel_ui_form_sms_send() {
+function sms_panel_ui_form_sms_send(&$form_state, $number = NULL, $message = NULL) {
   $form = sms_send_form();
+
+  $form['recipients'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Recipients'),
+    '#description' => t('Choose which users and/or phone numbers to send the SMS message to.'),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+  );    
+  
+  $form['number']['#title'] = t('Recipient numbers');
+  $form['number']['#autocomplete_path'] = 'sms/numbers/autocomplete';
+  $form['number']['#default_value'] = is_null($number) ? '' : $number;
+  $form['number']['#description'] = t('Enter a comma separated list of valid phone numbers to send the SMS message to.');
+  $form['recipients']['number'] = $form['number'];
+  unset($form['number']);
+  
+  $form['recipients']['user'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Recipient users'),
+    '#description' => t('Enter a comma separated list of phone activated users to send the SMS message to.'),
+    '#autocomplete_path' => 'sms/users/autocomplete',
+  );
   
   $form['message'] = array(
     '#type' => 'textarea',
     '#title' => t('SMS Message'),
     '#description' => t('SMS text message to send.'),
+    '#default_value' => is_null($message) ? '' : check_plain($message),
   );
-  
-  $form['number']['#autocomplete_path'] = 'sms/number/autocomplete';
   
   $form['submit'] = array(
     '#type' => 'submit',
@@ -72,14 +103,43 @@ function sms_panel_ui_form_sms_send() {
  * Form validation callback for SMS message sending.
  */
 function sms_panel_ui_form_sms_send_validate($form, &$form_state) {
-  // TODO: Validate the number using the smsframework's
-  // sms_validate_number() when it's fixed in its coming verison.
-  if ($form_state['values']['number'] != sms_formatter($form_state['values']['number'])) {
-    form_set_error('number', t('Please enter a valid phone number.'));
-  }
-  
   if (empty($form_state['values']['message'])) {
     form_set_error('message', t('Please fill out the SMS message.'));
+    return;
+  }
+  
+  if (empty($form_state['values']['number']) && empty($form_state['values']['user'])) {
+    form_set_error('number', t('As a minimum, you need to set a number or user as recipient.'));
+    return;
+  }
+  
+  // Validate recipient numbers.
+  // TODO: Validate the number using the smsframework's
+  // sms_validate_number() when it's fixed in its coming verison.
+  $form_state['values']['number'] = explode(',', $form_state['values']['number']);
+  $form_state['values']['number'] = array_map('trim', $form_state['values']['number']);
+  foreach ($form_state['values']['number'] as $number) {
+    if ($number != sms_formatter($number)) {
+      form_set_error('number', t('!number is not a valid phone number.', array('!number' => $number)));
+    }
+  }
+  
+  // Validate recipient users.
+  $query = "SELECT u.name, su.number 
+            FROM {sms_user} su
+            LEFT JOIN {users} u ON su.uid = u.uid
+            WHERE su.status = 2 AND u.name = '%s'";
+  $form_state['values']['user'] = explode(',', $form_state['values']['user']);
+  $form_state['values']['user'] = array_map('trim', $form_state['values']['user']);
+  foreach ($form_state['values']['user'] as $username) {
+    $account = db_fetch_object(db_query($query, $username));
+    if ($account->name != $username) {
+      form_set_error('user', t('<em>!user</em> has no activated phone number associated with his/her account.', array('!user' => $username)));
+      return;
+    }
+    else {
+      $form_state['values']['number'][] = $account->number;
+    }
   }
 }
 
@@ -87,7 +147,12 @@ function sms_panel_ui_form_sms_send_validate($form, &$form_state) {
  * Form submission callback for SMS message sending.
  */
 function sms_panel_ui_form_sms_send_submit($form, &$form_state) {
-  sms_send($form_state['values']['number'], $form_state['values']['message']);
+  $form_state['values']['number'] = array_filter($form_state['values']['number']);
+  $form_state['values']['number'] = array_unique($form_state['values']['number']);
+  
+  foreach ($form_state['values']['number'] as $number) {
+    sms_send($number, $form_state['values']['message']);
+  }
 }
 
 /**
@@ -237,7 +302,7 @@ function sms_panel_ui_sms_delete_confirm_submit($form, &$form_state) {
 }
 
 /**
- * Callback for user phone numbers autocomplete widget.
+ * Callback for user phone number autocomplete widget.
  *
  * Returns a JSON object containing autocomplete suggestions.
  */
@@ -247,6 +312,64 @@ function sms_number_autocomplete($string = '') {
     $result = db_query_range("SELECT number FROM {sms_user} WHERE number LIKE '%s%%'", $string, 0, 10);
     while ($user = db_fetch_object($result)) {
       $matches[$user->number] = check_plain($user->number);
+    }
+  }
+
+  drupal_json($matches);
+}
+
+/**
+ * Callback for multi user phone numbers autocomplete widget.
+ *
+ * Returns a JSON object containing autocomplete suggestions.
+ */
+function sms_numbers_autocomplete($string = '') {
+  $matches = array();
+  
+  if ($string) {
+    $numbers = explode(',', $string);
+    $numbers = array_map('trim', $numbers);
+    
+    $number = array_pop($numbers);
+    $result = db_query_range("SELECT number FROM {sms_user} WHERE number LIKE '%s%%'", $number, 0, 10);
+    while ($user = db_fetch_object($result)) {
+      if (count($numbers)) {
+        $matches[implode(', ', $numbers) . ', ' . $user->number] = check_plain($user->number);
+      }
+      else {
+        $matches[$user->number] = check_plain($user->number);
+      }
+    }
+  }
+
+  drupal_json($matches);
+}
+
+/**
+ * Callback for multi username autocomplete widget.
+ *
+ * Returns a JSON object containing autocomplete suggestions.
+ */
+function sms_users_autocomplete($string = '') {
+  $matches = array();
+  
+  if ($string) {
+    $names = explode(',', $string);
+    $names = array_map('trim', $names);
+    
+    $name = array_pop($names);
+    $query = "SELECT u.name
+              FROM {sms_user} su
+              LEFT JOIN {users} u ON su.uid = u.uid
+              WHERE su.status = 2 AND LOWER(name) LIKE '%s%%'";
+    $result = db_query_range($query, $name, 0, 10);
+    while ($user = db_fetch_object($result)) {
+      if (count($names)) {
+        $matches[implode(', ', $names) . ', ' . $user->name] = check_plain($user->name);
+      }
+      else {
+        $matches[$user->name] = check_plain($user->name);
+      }
     }
   }
 

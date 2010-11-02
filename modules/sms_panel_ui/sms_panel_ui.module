@@ -39,6 +39,16 @@ function sms_panel_ui_menu() {
     'type' => MENU_LOCAL_TASK,
   );
   
+  $items['admin/smsframework/panel/compose/%/%'] = array(
+    'title' => 'Compose',
+    'description' => 'Compose a new SMS message.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('sms_panel_ui_form_sms_send', 4, 5),
+    'access arguments' => array('send sms message'),
+    'file' => 'sms_panel_ui.inc',
+    'type' => MENU_CALLBACK,
+  );
+  
   $items['admin/smsframework/panel/configure'] = array(
     'title' => 'Configuration',
     'description' => 'Configure SMS Panel options.',
@@ -87,6 +97,22 @@ function sms_panel_ui_menu() {
   $items['sms/number/autocomplete'] = array(
     'title' => 'SMS number autocomplete',
     'page callback' => 'sms_number_autocomplete',
+    'access arguments' => array('administer sms panel'),
+    'file' => 'sms_panel_ui.inc',
+    'type' => MENU_CALLBACK,    
+  );
+  
+  $items['sms/numbers/autocomplete'] = array(
+    'title' => 'Multi SMS number autocomplete',
+    'page callback' => 'sms_numbers_autocomplete',
+    'access arguments' => array('administer sms panel'),
+    'file' => 'sms_panel_ui.inc',
+    'type' => MENU_CALLBACK,    
+  );
+  
+  $items['sms/users/autocomplete'] = array(
+    'title' => 'Multi SMS user autocomplete',
+    'page callback' => 'sms_users_autocomplete',
     'access arguments' => array('administer sms panel'),
     'file' => 'sms_panel_ui.inc',
     'type' => MENU_CALLBACK,    
