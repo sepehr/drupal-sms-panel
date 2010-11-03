@@ -324,7 +324,14 @@ function sms_numbers_autocomplete($string = '') {
     $numbers = array_map('trim', $numbers);
     
     $number = array_pop($numbers);
-    $result = db_query_range("SELECT number FROM {sms_user} WHERE number LIKE '%s%%'", $number, 0, 10);
+    $query = "SELECT su.number
+              FROM {sms_user} su
+              WHERE su.number LIKE '%s%%'
+              UNION
+              SELECT s.number
+              FROM {smses} s
+              WHERE s.number LIKE '%s%%'";
+    $result = db_query_range($query, $number, $number, 0, 10);
     while ($user = db_fetch_object($result)) {
       if (count($numbers)) {
         $matches[implode(', ', $numbers) . ', ' . $user->number] = check_plain($user->number);
