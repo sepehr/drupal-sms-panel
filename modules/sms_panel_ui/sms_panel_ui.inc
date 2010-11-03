@@ -69,6 +69,41 @@ function sms_panel_ui_callback_sms_actions($sms, $op) {
 }
 
 /**
+ * Form callback for SMS panel configuration options.
+ *
+ * @ingroup forms
+ * @see system_settings_form()
+ */
+function sms_panel_ui_form_configure() {
+  $form = array();
+  
+  $form['general_settings'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('General Settings'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  
+  $form['dashboard_settings'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Dashboard Settings'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );    
+    
+  if (module_exists('sms_panel_ui_datepicker')) {
+    $form['datepicker_settings'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Datepicker Settings'),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+    );
+  }
+  
+  return system_settings_form($form);
+}
+
+/**
  * Form callback for SMS message sending.
  *
  * @param $form_state

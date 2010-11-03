@@ -52,8 +52,8 @@ function sms_panel_ui_menu() {
   $items['admin/smsframework/panel/configure'] = array(
     'title' => 'Configuration',
     'description' => 'Configure SMS Panel options.',
-#    'page callback' => 'drupal_get_form',
-#    'page arguments' => array('sms_panel_ui_form_configure'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('sms_panel_ui_form_configure'),
     'access arguments' => array('administer sms panel'),
     'file' => 'sms_panel_ui.inc',
     'weight' => 4,
