@@ -79,22 +79,57 @@ function sms_panel_ui_form_configure() {
   
   $form['general_settings'] = array(
     '#type' => 'fieldset',
-    '#title' => t('General Settings'),
+    '#title' => t('General'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   );
   
   $form['dashboard_settings'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Dashboard Settings'),
+    '#title' => t('Dashboard'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
-  );    
+  );
+  
+  $form['autorespond_settings'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Autorespond'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  
+  $form['autoforward_settings'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Autoforward'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  
+  $form['signature_settings'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Signature'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  
+  $form['template_settings'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Templates'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  
+  $form['lists_settings'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Lists'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
     
   if (module_exists('sms_panel_ui_datepicker')) {
     $form['datepicker_settings'] = array(
       '#type' => 'fieldset',
-      '#title' => t('Datepicker Settings'),
+      '#title' => t('Datepicker'),
       '#collapsible' => TRUE,
       '#collapsed' => TRUE,
     );
