@@ -76,13 +76,45 @@ function sms_panel_ui_menu() {
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
   
+  $items['admin/smsframework/panel/sms/%sms/reply'] = array(
+    'title' => 'Reply',
+    'page callback' => 'sms_panel_ui_callback_sms_actions',
+    'page arguments' => array(4, 'reply'),
+    'access callback' => 'sms_panel_ui_callback_sms_actions_access',
+    'access arguments' => array(4, 'reply', 'send sms message'),
+    'file' => 'sms_panel_ui.inc',
+    'weight' => 1,
+    'type' => MENU_LOCAL_TASK,
+  );
+  
+  $items['admin/smsframework/panel/sms/%sms/resend'] = array(
+    'title' => 'Resend',
+    'page callback' => 'sms_panel_ui_callback_sms_actions',
+    'page arguments' => array(4, 'resend'),
+    'access callback' => 'sms_panel_ui_callback_sms_actions_access',
+    'access arguments' => array(4, 'resend', 'send sms message'),
+    'file' => 'sms_panel_ui.inc',
+    'weight' => 2,
+    'type' => MENU_LOCAL_TASK,
+  );
+  
+  $items['admin/smsframework/panel/sms/%sms/forward'] = array(
+    'title' => 'Forward',
+    'page callback' => 'sms_panel_ui_callback_sms_actions',
+    'page arguments' => array(4, 5),
+    'access arguments' => array('send sms message'),
+    'file' => 'sms_panel_ui.inc',
+    'weight' => 3,
+    'type' => MENU_LOCAL_TASK,
+  );
+  
   $items['admin/smsframework/panel/sms/%sms/delete'] = array(
     'title' => 'Delete',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('sms_panel_ui_sms_delete_confirm', 4),
     'access arguments' => array('delete sms message'),
     'file' => 'sms_panel_ui.inc',
-    'weight' => 3,
+    'weight' => 4,
     'type' => MENU_LOCAL_TASK,
   );
   
@@ -195,6 +227,35 @@ function sms_panel_ui_theme() {
       'file' => 'sms_panel_ui.inc',
     ),
   );
+}
+
+/**
+ * Access callback for SMS send form proxy.
+ *
+ * @param $op
+ *   SMS operation.
+ * @param $sms
+ *   SMS object.
+ * @param $perm
+ *   Permission to be passed to user_access().
+ *
+ * @return
+ *   Boolean value.
+ *
+ * @see sms_panel_ui_callback_sms_actions()
+ */
+function sms_panel_ui_callback_sms_actions_access($sms, $op, $perm) {
+  if (!user_access($perm)) {
+    return FALSE;
+  }
+  
+  switch ($sms->direction) {
+    case SMS_PANEL_IN:
+      return ($op == 'resend') ? FALSE : TRUE;
+      
+    case SMS_PANEL_OUT:
+      return ($op == 'reply') ? FALSE : TRUE;
+  }
 }
 
 /**

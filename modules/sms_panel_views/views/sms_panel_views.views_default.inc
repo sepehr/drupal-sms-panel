@@ -11,7 +11,7 @@
  */
 function sms_panel_views_views_default_views() {
   /**
-   * sms_incoming default view.
+   * sms_panel_incoming default view.
    */
   $view = new view;
   $view->name = 'sms_panel_incoming';
@@ -160,7 +160,7 @@ function sms_panel_views_views_default_views() {
       'relationship' => 'none',
     ),
     'timestamp' => array(
-      'label' => 'Recieve Date',
+      'label' => 'Receive Date',
       'alter' => array(
         'alter_text' => 0,
         'text' => '',
@@ -249,6 +249,36 @@ function sms_panel_views_views_default_views() {
       'field' => 'view_sms',
       'relationship' => 'none',
     ),
+    'reply_sms' => array(
+      'label' => 'Reply',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'link_class' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'target' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'html' => 0,
+        'strip_tags' => 0,
+      ),
+      'empty' => '',
+      'hide_empty' => 0,
+      'empty_zero' => 0,
+      'text' => 'Reply',
+      'exclude' => 0,
+      'id' => 'reply_sms',
+      'table' => 'smses',
+      'field' => 'reply_sms',
+      'relationship' => 'none',
+    ),
     'delete_sms' => array(
       'label' => 'Actions',
       'alter' => array(
@@ -278,6 +308,9 @@ function sms_panel_views_views_default_views() {
       'table' => 'smses',
       'field' => 'delete_sms',
       'relationship' => 'none',
+      'override' => array(
+        'button' => 'Override',
+      ),
     ),
   ));
   $handler->override_option('sorts', array(
@@ -442,6 +475,7 @@ function sms_panel_views_views_default_views() {
       'gateway' => 'gateway',
       'view_sms' => 'delete_sms',
       'delete_sms' => 'delete_sms',
+      'reply_sms' => 'delete_sms',
     ),
     'info' => array(
       'sid' => array(
@@ -470,6 +504,9 @@ function sms_panel_views_views_default_views() {
       'delete_sms' => array(
         'separator' => ' | ',
       ),
+      'reply_sms' => array(
+        'separator' => '',
+      ),
     ),
     'default' => '-1',
   ));
@@ -494,7 +531,7 @@ function sms_panel_views_views_default_views() {
   
   
   /**
-   * sms_outgoing default view.
+   * sms_panel_outgoing default view.
    */
   $view = new view;
   $view->name = 'sms_panel_outgoing';
@@ -763,6 +800,36 @@ function sms_panel_views_views_default_views() {
       'field' => 'delete_sms',
       'relationship' => 'none',
     ),
+    'resend_sms' => array(
+      'label' => 'Resend',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'link_class' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'target' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'html' => 0,
+        'strip_tags' => 0,
+      ),
+      'empty' => '',
+      'hide_empty' => 0,
+      'empty_zero' => 0,
+      'text' => 'Resend',
+      'exclude' => 0,
+      'id' => 'resend_sms',
+      'table' => 'smses',
+      'field' => 'resend_sms',
+      'relationship' => 'none',
+    ),
   ));
   $handler->override_option('sorts', array(
     'timestamp' => array(
@@ -955,13 +1022,13 @@ function sms_panel_views_views_default_views() {
     'columns' => array(
       'sid' => 'sid',
       'name' => 'name',
-      'number_1' => 'name',
       'message' => 'message',
       'number' => 'number',
       'timestamp' => 'timestamp',
       'gateway' => 'gateway',
       'view_sms' => 'delete_sms',
       'delete_sms' => 'delete_sms',
+      'resend_sms' => 'delete_sms',
     ),
     'info' => array(
       'sid' => array(
@@ -969,12 +1036,8 @@ function sms_panel_views_views_default_views() {
         'separator' => '',
       ),
       'name' => array(
-        'sortable' => 0,
+        'sortable' => 1,
         'separator' => ' - ',
-      ),
-      'number_1' => array(
-        'sortable' => 0,
-        'separator' => '',
       ),
       'message' => array(
         'separator' => '',
@@ -995,6 +1058,9 @@ function sms_panel_views_views_default_views() {
       'delete_sms' => array(
         'separator' => ' | ',
       ),
+      'resend_sms' => array(
+        'separator' => '',
+      ),
     ),
     'default' => '-1',
   ));
@@ -1014,7 +1080,7 @@ function sms_panel_views_views_default_views() {
     'weight' => 0,
     'name' => 'navigation',
   ));
-  
+
   $views[$view->name] = $view;
   
   /**

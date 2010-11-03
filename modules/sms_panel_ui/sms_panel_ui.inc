@@ -45,6 +45,30 @@ function sms_panel_ui_theme_number($number, $show_username) {
 }
 
 /**
+ * Proxy callback for SMS send form.
+ *
+ * @param $op
+ *   SMS operation.
+ * @param $sms
+ *   SMS object.
+ *
+ * @return
+ *   Prepopulated SMS send form.
+ */
+function sms_panel_ui_callback_sms_actions($sms, $op) {
+  switch ($op) {
+    case 'reply':
+      return drupal_get_form('sms_panel_ui_form_sms_send', $sms->number, NULL);
+      
+    case 'resend':
+      return drupal_get_form('sms_panel_ui_form_sms_send', $sms->number, $sms->message);
+    
+    case 'forward':
+      return drupal_get_form('sms_panel_ui_form_sms_send', NULL, $sms->message);
+  }
+}
+
+/**
  * Form callback for SMS message sending.
  *
  * @param $form_state
@@ -72,7 +96,7 @@ function sms_panel_ui_form_sms_send(&$form_state, $number = NULL, $message = NUL
   
   $form['number']['#title'] = t('Recipient numbers');
   $form['number']['#autocomplete_path'] = 'sms/numbers/autocomplete';
-  $form['number']['#default_value'] = is_null($number) ? '' : $number;
+  $form['number']['#default_value'] = (is_null($number) || empty($number)) ? '' : $number;
   $form['number']['#description'] = t('Enter a comma separated list of valid phone numbers to send the SMS message to.');
   $form['recipients']['number'] = $form['number'];
   unset($form['number']);
@@ -220,24 +244,6 @@ function sms_panel_ui_form_sms_info(&$form_state, $sms) {
     '#value' => '<label>' . t('Message text:') . '</label><div class="sms-info-message">' . $sms->message . '</div>',
     '#suffix' => '</div>',
   );
-  
-  if ($sms->direction) {
-    $form['buttons']['resend'] = array(
-      '#type' => 'button',
-      '#value' => t('Resend'),
-    );
-  }
-  else {
-    $form['buttons']['reply'] = array(
-      '#type' => 'button',
-      '#value' => t('Reply'),
-    );
-  }
-  
-  $form['buttons']['forward'] = array(
-    '#type' => 'button',
-    '#value' => t('Forward'),
-  );
     
   $form['buttons']['delete'] = array(
     '#type' => 'button',
@@ -251,23 +257,10 @@ function sms_panel_ui_form_sms_info(&$form_state, $sms) {
  * Form validation callback for SMS message info page.
  */
 function sms_panel_ui_form_sms_info_validate($form, &$form_state) {
-  switch ($form_state['values']['op']) {
-    case 'Delete':
-      // TODO: Find a better way to go to delete confirm page.
-      drupal_goto(sms_url($form['sms_info']['sms_info_sid']['#value']) . '/delete');
-      exit();
-    
-    case 'Resend':
-      
-      break;
-      
-    case 'Reply':
-      
-      break;
-      
-    case 'Forward':
-      
-      break;
+  // TODO: Find a better way to go to delete confirm page.
+  if ($form_state['values']['op'] == t('Delete')) {
+    drupal_goto(sms_url($form['sms_info']['sms_info_sid']['#value']) . '/delete');
+    exit();
   }
 }
 

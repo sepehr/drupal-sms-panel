@@ -147,6 +147,30 @@ function sms_panel_views_views_data() {
     ),
   );
   
+  $data['smses']['reply_sms'] = array(
+    'field' => array(
+      'title' => t('Reply Link'),
+      'help' => t('Provide a link to reply to the SMS message.'),
+      'handler' => 'sms_panel_views_handler_field_sms_link_reply',
+    ),
+  );
+  
+  $data['smses']['resend_sms'] = array(
+    'field' => array(
+      'title' => t('Resend Link'),
+      'help' => t('Provide a link to resend the SMS message.'),
+      'handler' => 'sms_panel_views_handler_field_sms_link_resend',
+    ),
+  );
+  
+  $data['smses']['forward_sms'] = array(
+    'field' => array(
+      'title' => t('Forward Link'),
+      'help' => t('Provide a link to forward the SMS message.'),
+      'handler' => 'sms_panel_views_handler_field_sms_link_forward',
+    ),
+  );
+  
   $data['smses']['delete_sms'] = array(
     'field' => array(
       'title' => t('Delete Link'),
@@ -223,6 +247,15 @@ function sms_panel_views_views_handlers() {
       'parent' => 'views_handler_field_xss',
     ),
     'sms_panel_views_handler_field_sms_link' => array(
+      'parent' => 'views_handler_field',
+    ),    
+    'sms_panel_views_handler_field_sms_link_reply' => array(
+      'parent' => 'views_handler_field',
+    ),
+    'sms_panel_views_handler_field_sms_link_resend' => array(
+      'parent' => 'views_handler_field',
+    ),
+    'sms_panel_views_handler_field_sms_link_forward' => array(
       'parent' => 'views_handler_field',
     ),
     'sms_panel_views_handler_field_sms_link_delete' => array(
