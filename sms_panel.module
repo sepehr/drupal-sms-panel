@@ -8,18 +8,10 @@
 
 /**
  * Module constants.
- * Defines placeholders for SMS message sending direction.
+ * Defines placeholders for SMS message direction.
  */
 define('SMS_PANEL_IN', 0);
 define('SMS_PANEL_OUT', 1);
-
-/**
- * Implementation of hook_init().
- */
-function sms_panel_init() {
-  // Temporary implemented for testing purposes.
-  
-}
 
 /**
  * Implementation of hook_perm().
