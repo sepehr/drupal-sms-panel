@@ -52,7 +52,8 @@ function sms_panel_sms_send_alter(&$outgoing, $op) {
   else if ($op == 'post send' && $outgoing['response']) {
     global $user;
     $gateway = sms_default_gateway();
-    
+
+    // Build and save the SMS object.
     $sms = new stdClass();
     $sms->uid = $user->uid;
     $sms->timestamp = time();
@@ -60,7 +61,6 @@ function sms_panel_sms_send_alter(&$outgoing, $op) {
     $sms->number = $outgoing['number'];
     $sms->message = $outgoing['message'];
     $sms->gateway = $gateway['identifier'];
-    
     sms_save($sms);
   }
 }
@@ -85,22 +85,20 @@ function sms_panel_sms_incoming($op, $number, $message, $options) {
 }
 
 /**
- * Helper function to save a sms message to database.
+ * API function to simply save a sms message.
  *
  * @param $sms
  *   SMS object to be saved.
  */
 function sms_save(&$sms) {
-  if (is_array($sms)) {
-    $sms = (object) $sms;
-  }
+  $sms = (object) $sms;
   
   $sms->timestamp = $sms->timestamp ? $sms->timestamp : time();
   drupal_write_record('smses', $sms);
 }
 
 /**
- * Helper function to delete a sms message from database.
+ * API function to delete a sms message.
  *
  * @param $sid
  *   SMS object or identifier to be deleted.
@@ -120,7 +118,7 @@ function sms_delete($sid) {
 }
 
 /**
- * Helper function to load a sms message from database.
+ * API function to load a sms message from database.
  *
  * @param $params
  *   The sid of the SMS message or an array of conditions to match against.

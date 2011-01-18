@@ -19,7 +19,7 @@ function sms_panel_install() {
  */
 function sms_panel_schema() {
   $schema = array();
-  
+
   $schema['smses'] = array(
     'description' => 'The base table for SMS messages.',
     'fields' => array(
