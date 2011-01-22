@@ -7,7 +7,7 @@
  */
 
 /**
- * Implementation of hook_install().
+ * Implements hook_install().
  */
 function sms_panel_install() {
   drupal_install_schema('sms_panel');
@@ -15,11 +15,12 @@ function sms_panel_install() {
 }
 
 /**
- * Implementation of hook_schema().
+ * Implements hook_schema().
  */
 function sms_panel_schema() {
   $schema = array();
 
+  // TODO: Rename the schema.
   $schema['smses'] = array(
     'description' => 'The base table for SMS messages.',
     'fields' => array(
@@ -39,7 +40,7 @@ function sms_panel_schema() {
         'description' => 'The direction of the message.',
         'type' => 'int',
         'unsigned' => TRUE,
-        'not null' => TRUE,    
+        'not null' => TRUE,
       ),
       'number' => array(
         'description' => 'Sender or reciever number',
@@ -59,7 +60,7 @@ function sms_panel_schema() {
         'description' => 'The gateway identifier used to send or recieve this message.',
         'type' => 'varchar',
         'length' => 32,
-        'not null' => TRUE,        
+        'not null' => TRUE,
       ),
       'timestamp' => array(
         'description' => 'The timestamp of sending or recieving message.',
@@ -76,13 +77,14 @@ function sms_panel_schema() {
     ),
     'primary key' => array('sid'),
   );
-  
+
   return $schema;
 }
 
 /**
- * Implementation of hook_uninstall().
+ * Implements hook_uninstall().
  */
 function sms_panel_uninstall() {
   drupal_uninstall_schema('sms_panel');
 }
+
