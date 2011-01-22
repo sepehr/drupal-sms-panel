@@ -7,5 +7,6 @@
  */
 
 /**
- * Implementation of hook_menu().
+ * Implements hook_menu().
  */
+

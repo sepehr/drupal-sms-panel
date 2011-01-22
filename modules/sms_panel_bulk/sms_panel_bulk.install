@@ -7,18 +7,18 @@
  */
 
 /**
- * Implementation of hook_install().
+ * Implements hook_install().
  */
 function sms_panel_bulk_install() {
   drupal_install_schema('sms_panel_bulk');
 }
 
 /**
- * Implementation of hook_schema().
+ * Implements hook_schema().
  */
 function sms_panel_bulk_schema() {
   $schema = array();
-  
+
   $schema['sms_messages_bulk'] = array(
     'description' => 'The base table for recording bulk SMS sends.',
     'fields' => array(
@@ -58,7 +58,7 @@ function sms_panel_bulk_schema() {
         'type' => 'text',
         'size' => 'big',
         'not null' => TRUE,
-      ),      
+      ),
     ),
     'indexes' => array(
       'sms_msg_blk_uid' => array('uid'),
@@ -66,13 +66,14 @@ function sms_panel_bulk_schema() {
     ),
     'primary key' => array('bsid'),
   );
-  
+
   return $schema;
 }
 
 /**
- * Implementation of hook_uninstall().
+ * Implements hook_uninstall().
  */
 function sms_panel_bulk_uninstall() {
   drupal_uninstall_schema('sms_panel_bulk');
 }
+
