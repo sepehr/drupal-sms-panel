@@ -7,7 +7,7 @@
  */
 
 /**
- * Implementation of hook_views_api().
+ * Implements hook_views_api().
  */
 function sms_panel_views_views_api() {
   return array(
@@ -17,7 +17,7 @@ function sms_panel_views_views_api() {
 }
 
 /**
- * Implementation of hook_form_alter().
+ * Implements hook_form_alter().
  *
  * Adds a messy reset button to Views exposed forms.
  */
@@ -26,16 +26,16 @@ function sms_panel_views_form_alter(&$form, $form_state, $form_id) {
     'sms_panel_incoming',
     'sms_panel_outgoing',
   );
-  
+
   if (in_array($form_state['view']->name, $views_to_alter)) {
     $current_display = $form_state['view']->current_display;
     $reset = array(
       '#type' => 'markup',
-      '#value' => '<input '. drupal_attributes(array('type' => 'button', 'value' => t('Reset') )) . 
-        'class="form-submit" onClick="window.location = \'' . 
+      '#value' => '<input '. drupal_attributes(array('type' => 'button', 'value' => t('Reset') )) .
+        'class="form-submit" onClick="window.location = \'' .
         url($form_state['view']->display[$current_display]->display_options['path']) . '\';" />',
     );
-     
+
     // Check wrapper fielset.
     if ($form[$form_id . '_fieldset']) {
      $form[$form_id . '_fieldset']['reset'] = $reset;
@@ -45,3 +45,4 @@ function sms_panel_views_form_alter(&$form, $form_state, $form_id) {
     }
   }
 }
+

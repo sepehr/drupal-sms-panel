@@ -7,7 +7,7 @@
  */
 
 /**
- * Implementation of hook_views_default_views().
+ * Implements hook_views_default_views().
  */
 function sms_panel_views_views_default_views() {
   /**
@@ -528,8 +528,8 @@ function sms_panel_views_views_default_views() {
   ));
 
   $views[$view->name] = $view;
-  
-  
+
+
   /**
    * sms_panel_outgoing default view.
    */
@@ -1082,7 +1082,7 @@ function sms_panel_views_views_default_views() {
   ));
 
   $views[$view->name] = $view;
-  
+
   /**
    * Return both views.
    */

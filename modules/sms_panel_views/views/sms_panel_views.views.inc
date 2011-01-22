@@ -7,20 +7,20 @@
  */
 
 /**
- * Implementation of hook_views_data().
+ * Implements hook_views_data().
  */
 function sms_panel_views_views_data() {
   $data = array();
-  
+
   // Introducing {smses} table.
   $data['smses']['table']['group'] = t('SMS');
-  
+
   $data['smses']['table']['base'] = array(
     'field' => 'sid',
     'title' => t('SMS'),
     'help' => t('SMS messages sent or recieved through the website.'),
   );
-  
+
   $data['smses']['sid'] = array(
     'title' => t('SMS identifier'),
     'help' => t('The SMS message ID.'),
@@ -37,8 +37,8 @@ function sms_panel_views_views_data() {
     'argument' => array(
       'handler' => 'views_handler_argument_numeric',
     ),
-  );    
-  
+  );
+
   $data['smses']['uid'] = array(
     'title' => t('User identifier'),
     'help' => t('The user ID of the SMS message sender.'),
@@ -64,7 +64,7 @@ function sms_panel_views_views_data() {
       'name field' => 'name',
     ),
   );
-  
+
   $data['smses']['direction'] = array(
     'title' => t('SMS Outgoing'),
     'help' => t('Whether the SMS message is incoming or outgoing.'),
@@ -81,7 +81,7 @@ function sms_panel_views_views_data() {
       'type' => 'yes-no',
     ),
   );
-  
+
   $data['smses']['number'] = array(
     'title' => t('Phone number'),
     'help' => t('SMS message sender or reciever phone number.'),
@@ -95,7 +95,7 @@ function sms_panel_views_views_data() {
       'handler' => 'views_handler_filter_string',
     ),
   );
-  
+
   $data['smses']['message'] = array(
     'title' => t('SMS text'),
     'help' => t('SMS message body text.'),
@@ -109,7 +109,7 @@ function sms_panel_views_views_data() {
       'handler' => 'views_handler_filter_string',
     ),
   );
-  
+
   $data['smses']['gateway'] = array(
     'title' => t('SMS gateway'),
     'help' => t('Default SMSFramework gateway used.'),
@@ -123,7 +123,7 @@ function sms_panel_views_views_data() {
       'handler' => 'views_handler_filter_string',
     ),
   );
-    
+
   $data['smses']['timestamp'] = array(
     'title' => t('SMS operation timestamp.'),
     'help' => t('The date that a SMS message has been sent or recieved.'),
@@ -138,7 +138,7 @@ function sms_panel_views_views_data() {
       'handler' => 'views_handler_filter_date',
     ),
   );
-  
+
   $data['smses']['view_sms'] = array(
     'field' => array(
       'title' => t('Link'),
@@ -146,7 +146,7 @@ function sms_panel_views_views_data() {
       'handler' => 'sms_panel_views_handler_field_sms_link',
     ),
   );
-  
+
   $data['smses']['reply_sms'] = array(
     'field' => array(
       'title' => t('Reply Link'),
@@ -154,7 +154,7 @@ function sms_panel_views_views_data() {
       'handler' => 'sms_panel_views_handler_field_sms_link_reply',
     ),
   );
-  
+
   $data['smses']['resend_sms'] = array(
     'field' => array(
       'title' => t('Resend Link'),
@@ -162,7 +162,7 @@ function sms_panel_views_views_data() {
       'handler' => 'sms_panel_views_handler_field_sms_link_resend',
     ),
   );
-  
+
   $data['smses']['forward_sms'] = array(
     'field' => array(
       'title' => t('Forward Link'),
@@ -170,7 +170,7 @@ function sms_panel_views_views_data() {
       'handler' => 'sms_panel_views_handler_field_sms_link_forward',
     ),
   );
-  
+
   $data['smses']['delete_sms'] = array(
     'field' => array(
       'title' => t('Delete Link'),
@@ -178,24 +178,25 @@ function sms_panel_views_views_data() {
       'handler' => 'sms_panel_views_handler_field_sms_link_delete',
     ),
   );
-  
+
   // Introducing {sms_user} table,
   // on behalf of sms_user.module, Views your majesty!
+  // TODO: Move to a separate module.
   $data['sms_user']['table']['group'] = t('SMS User');
-  
+
   $data['sms_user']['table']['base'] = array(
     'field' => 'uid',
     'title' => t('SMS User'),
     'help' => t('Registered users who filled their cell number.'),
   );
-  
+
   $data['sms_user']['table']['join'] = array(
     'users' => array(
       'left_field' => 'uid',
       'field' => 'uid',
     ),
   );
-  
+
   $data['sms_user']['number'] = array(
     'title' => t('User mobile number'),
     'help' => t('The mobile phone number of the user.'),
@@ -210,7 +211,7 @@ function sms_panel_views_views_data() {
       'handler' => 'views_handler_sort',
     ),
   );
-  
+
   $data['sms_user']['status'] = array(
     'title' => t('User mobile number status'),
     'help' => t('The status of the user mobile phone number.'),
@@ -225,20 +226,20 @@ function sms_panel_views_views_data() {
       'handler' => 'views_handler_sort',
     ),
   );
-  
+
   return $data;
 }
 
 /**
- * Implementation of hook_views_handlers().
+ * Implements hook_views_handlers().
  */
 function sms_panel_views_views_handlers() {
   $handlers = array();
-  
+
   $handlers['info'] = array(
     'path' => drupal_get_path('module', 'sms_panel_views') . '/views/handlers',
   );
-  
+
   $handlers['handlers'] = array(
     'sms_panel_views_handler_field_user' => array(
       'parent' => 'views_handler_field_user',
@@ -248,7 +249,7 @@ function sms_panel_views_views_handlers() {
     ),
     'sms_panel_views_handler_field_sms_link' => array(
       'parent' => 'views_handler_field',
-    ),    
+    ),
     'sms_panel_views_handler_field_sms_link_reply' => array(
       'parent' => 'views_handler_field',
     ),
@@ -262,6 +263,7 @@ function sms_panel_views_views_handlers() {
       'parent' => 'views_handler_field',
     ),
   );
-  
+
   return $handlers;
 }
+
