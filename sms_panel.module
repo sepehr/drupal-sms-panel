@@ -197,9 +197,7 @@ function sms_load($params = array(), $fields = array(), $flush = FALSE) {
     return FALSE;
   }
 
-  // Cache it.
   $cache[$sms->sid] = $sms;
-
   return $sms;
 }
 
