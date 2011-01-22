@@ -3,5 +3,6 @@ name = "SMS Panel Bulk"
 description = "Extends SMS Panel UI to be able to send and manage bulk SMS messages more usably."
 core = 6.x
 package = SMS Framework
+dependencies[] = userqueue
 dependencies[] = sms_panel_ui
 
