@@ -1,7 +1,0 @@
-; $Id$
-name = "SMS Panel UI Datepicker"
-description = "Provides the UI with a jQuery UI Datepicker widget."
-core = 6.x
-package = SMS Framework
-dependencies[] = date_popup
-dependencies[] = sms_panel_ui
