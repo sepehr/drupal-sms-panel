@@ -235,7 +235,6 @@ function sms_panel_views_views_data() {
  */
 function sms_panel_views_views_handlers() {
   $handlers = array();
-
   $handlers['info'] = array(
     'path' => drupal_get_path('module', 'sms_panel_views') . '/views/handlers',
   );
