@@ -19,10 +19,10 @@ function sms_panel_bulk_install() {
 function sms_panel_bulk_schema() {
   $schema = array();
 
-  $schema['sms_messages_bulk'] = array(
+  $schema['sms_panel_bulk'] = array(
     'description' => 'The base table for recording bulk SMS sends.',
     'fields' => array(
-      'bsid' => array(
+      'bid' => array(
         'description' => 'The primary identifier for bulk sends.',
         'type' => 'serial',
         'unsigned' => TRUE,
@@ -34,11 +34,11 @@ function sms_panel_bulk_schema() {
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
-      'title' => array(
-        'description' => 'Bulk SMS send title.',
+      'note' => array(
+        'description' => 'Bulk SMS mesage note.',
         'type' => 'varchar',
         'length' => 128,
-        'not null' => TRUE,
+        'not null' => FALSE,
       ),
       'message' => array(
         'description' => 'The bulk sent SMS message body.',
@@ -46,6 +46,12 @@ function sms_panel_bulk_schema() {
         'length' => 255,
         'not null' => TRUE,
         'default' => '',
+      ),
+      'gateway' => array(
+        'description' => 'The gateway identifier used to send the Bulk SMS message.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
       ),
       'timestamp' => array(
         'description' => 'The timestamp of sending or recieving message.',
@@ -64,7 +70,7 @@ function sms_panel_bulk_schema() {
       'sms_msg_blk_uid' => array('uid'),
       'sms_msg_blk_timestamp' => array('timestamp'),
     ),
-    'primary key' => array('bsid'),
+    'primary key' => array('bid'),
   );
 
   return $schema;

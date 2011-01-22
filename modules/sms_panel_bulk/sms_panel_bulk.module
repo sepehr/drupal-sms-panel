@@ -7,6 +7,42 @@
  */
 
 /**
+ * Implements hook_perm().
+ */
+function sms_panel_bulk() {
+  return array(
+    'send bulk sms messages',
+    'delete bulk sms messages'
+  );
+}
+
+/**
  * Implements hook_menu().
  */
+function sms_panel_bulk_menu() {
+  $items = array();
+
+  $items['admin/smsframework/panel/compose/bulk'] = array(
+    'title' => 'Bulk Compose',
+    'Description' => 'Compose a new bulk SMS message.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('sms_panel_bulk_form_compose'),
+    'access arguments' => array('send bulk sms message'),
+    'file' => 'sms_panel_bulk.inc',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 2,
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_views_api().
+ */
+function sms_panel_views_api() {
+  return array(
+    'api' => 2.0,
+    'path' => drupal_get_path('module', 'sms_panel_bulk') . '/views',
+  );
+}
 
