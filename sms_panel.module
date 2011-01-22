@@ -14,42 +14,44 @@ define('SMS_PANEL_IN', 0);
 define('SMS_PANEL_OUT', 1);
 
 /**
- * Implementation of hook_perm().
+ * Implements hook_perm().
  */
 function sms_panel_perm() {
   return array(
     'administer sms panel',
     'send sms message',
     'view sms message',
-    'delete sms message',    
+    'delete sms message',
     'view outgoing message list',
     'view incoming message list',
   );
 }
 
 /**
- * Implementation of hook_sms_send_alter().
+ * Implements hook_sms_send_alter() to track the outgoing SMS.
  *
- * This is a temporary implementation since 
- * we're using a patched version of the smsframework and
- * it's not available in the original version.
+ * This is a temporary implementation since
+ * we're using a patched version of the SMSFramework and
+ * it's not available in its current 1.x branch.
  *
  * @param $outgoing
  *   An array of following data passed by reference:
  *   - number: Phone number of recipient.
  *   - message: SMS text body.
  *   - response: The response of gateway's send callback.
+ * @param $op
+ *   The operation type.
  */
 function sms_panel_sms_send_alter(&$outgoing, $op) {
   if ($op == 'pre send' && strpos($outgoing['message'], t('confirmation')) === FALSE && !user_access('send sms message')) {
     drupal_set_message(t('You have not enough permission to send SMS messages.'), 'error', FALSE);
-    
+
     // TODO: Just change the following lines!
     drupal_goto($_SERVER['HTTP_REFERER']);
     exit();
   }
-  
-  else if ($op == 'post send' && $outgoing['response']) {
+
+  elseif ($op == 'post send' && $outgoing['response']) {
     global $user;
     $gateway = sms_default_gateway();
 
@@ -66,20 +68,19 @@ function sms_panel_sms_send_alter(&$outgoing, $op) {
 }
 
 /**
- * Implementation of hook_sms_incoming().
+ * Implements hook_sms_incoming().
  */
 function sms_panel_sms_incoming($op, $number, $message, $options) {
   if ($op == 'post process') {
     $sms = new stdClass();
     $gateway = sms_default_gateway();
-    
+
     $sms->uid = 0;
     $sms->number = $number;
     $sms->timestamp = time();
     $sms->message = $message;
     $sms->direction = SMS_PANEL_IN;
     $sms->gateway = $gateway['identifier'];
-
     sms_save($sms);
   }
 }
@@ -92,7 +93,7 @@ function sms_panel_sms_incoming($op, $number, $message, $options) {
  */
 function sms_save(&$sms) {
   $sms = (object) $sms;
-  
+
   $sms->timestamp = $sms->timestamp ? $sms->timestamp : time();
   drupal_write_record('smses', $sms);
 }
@@ -106,14 +107,14 @@ function sms_save(&$sms) {
 function sms_delete($sid) {
   global $user;
   $allowed = FALSE;
-  
+
   if (user_access('delete sms message')) {
     $sid = is_object($sid) ? $sid->sid : $sid;
     db_query("DELETE FROM {smses} WHERE sid = %d", $sid);
     drupal_set_message(t('The SMS message logs has been successfully deleted.'), 'status', FALSE);
   }
   else {
-    drupal_set_message(t('You have not enough permission to delete the SMS message.'), 'error', FALSE);
+    drupal_set_message(t('You have not enough permission to delete the SMS message.'), 'warning', FALSE);
   }
 }
 
@@ -133,14 +134,14 @@ function sms_delete($sid) {
  * @todo
  *   Extend to be able to match other conditions.
  */
-function sms_load($params = array(), $fields = array(), $flush = FALSE) { 
+function sms_load($params = array(), $fields = array(), $flush = FALSE) {
   static $cache = array();
-  
+
   // Flush the internal cache, if set so.
   if ($flush) {
     $cache = array();
   }
-  
+
   // Check for cache availablity or build the query.
   $arguments = array();
   if (is_numeric($params)) {
@@ -168,7 +169,7 @@ function sms_load($params = array(), $fields = array(), $flush = FALSE) {
   else {
     return FALSE;
   }
-  
+
   // Preparing fields to be retrieved.
   if (empty($fields) || !is_array($fields)) {
     $fields = '*';
@@ -176,7 +177,7 @@ function sms_load($params = array(), $fields = array(), $flush = FALSE) {
   else {
     $fields = implode(',', $fields);
   }
-  
+
   // Get and iterate through the results.
   $sms = array();
   $conditions = $conditions ? $conditions : 'TRUE';
@@ -186,7 +187,7 @@ function sms_load($params = array(), $fields = array(), $flush = FALSE) {
     $sms[] = $sms_object;
   }
   unset($results);
-  
+
   // Remove the array wrapper, if there were only one result.
   $count = count($sms);
   if ($count == 1) {
@@ -195,10 +196,10 @@ function sms_load($params = array(), $fields = array(), $flush = FALSE) {
   elseif (!$count) {
     return FALSE;
   }
-  
+
   // Cache it.
   $cache[$sms->sid] = $sms;
-  
+
   return $sms;
 }
 
