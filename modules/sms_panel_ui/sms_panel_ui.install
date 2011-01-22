@@ -11,9 +11,7 @@
  */
 function sms_panel_ui_enable() {
   drupal_set_message(st('The <a href="!link">SMS Panel UI</a> has been successfully enabled.',
-    array(
-      '!link' => url('admin/smsframework/panel'),
-    )
+    array('!link' => url('admin/smsframework/panel'))
   ));
 }
 

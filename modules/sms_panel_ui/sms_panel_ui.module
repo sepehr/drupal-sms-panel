@@ -11,13 +11,13 @@
  */
 function sms_panel_ui_menu() {
   $items = array();
-  
+
   $items['admin/smsframework/panel'] = array(
     'title' => 'SMS Management Panel',
     'description' => 'Central control panel for managing SMS messages.',
     'access arguments' => array('administer sms panel'),
   );
-  
+
   $items['admin/smsframework/panel/dashboard'] = array(
     'title' => 'Dashboard',
     'description' => 'Overall view of site SMS messaging activities.',
@@ -27,7 +27,7 @@ function sms_panel_ui_menu() {
     'weight' => 0,
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
-  
+
   $items['admin/smsframework/panel/compose'] = array(
     'title' => 'Compose',
     'description' => 'Compose a new SMS message.',
@@ -38,7 +38,7 @@ function sms_panel_ui_menu() {
     'weight' => 3,
     'type' => MENU_LOCAL_TASK,
   );
-  
+
   $items['admin/smsframework/panel/compose/%/%'] = array(
     'title' => 'Compose',
     'description' => 'Compose a new SMS message.',
@@ -48,7 +48,7 @@ function sms_panel_ui_menu() {
     'file' => 'sms_panel_ui.inc',
     'type' => MENU_CALLBACK,
   );
-  
+
   $items['admin/smsframework/panel/configure'] = array(
     'title' => 'Configuration',
     'description' => 'Configure SMS Panel options.',
@@ -59,23 +59,23 @@ function sms_panel_ui_menu() {
     'weight' => 4,
     'type' => MENU_LOCAL_TASK,
   );
-  
+
   $items['admin/smsframework/panel/sms/%sms'] = array(
     'title callback' => 'sms_title',
     'title arguments' => array(4),
     'page callback' => 'sms_panel_ui_page_sms',
     'page arguments' => array(4),
     'access arguments' => array('view sms message'),
-    'file' => 'sms_panel_ui.inc',    
+    'file' => 'sms_panel_ui.inc',
     'type' => MENU_NORMAL_ITEM,
   );
-  
+
   $items['admin/smsframework/panel/sms/%sms/view'] = array(
     'title' => 'View',
     'weight' => 0,
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
-  
+
   $items['admin/smsframework/panel/sms/%sms/reply'] = array(
     'title' => 'Reply',
     'page callback' => 'sms_panel_ui_callback_sms_actions',
@@ -86,7 +86,7 @@ function sms_panel_ui_menu() {
     'weight' => 1,
     'type' => MENU_LOCAL_TASK,
   );
-  
+
   $items['admin/smsframework/panel/sms/%sms/resend'] = array(
     'title' => 'Resend',
     'page callback' => 'sms_panel_ui_callback_sms_actions',
@@ -97,7 +97,7 @@ function sms_panel_ui_menu() {
     'weight' => 2,
     'type' => MENU_LOCAL_TASK,
   );
-  
+
   $items['admin/smsframework/panel/sms/%sms/forward'] = array(
     'title' => 'Forward',
     'page callback' => 'sms_panel_ui_callback_sms_actions',
@@ -107,7 +107,7 @@ function sms_panel_ui_menu() {
     'weight' => 3,
     'type' => MENU_LOCAL_TASK,
   );
-  
+
   $items['admin/smsframework/panel/sms/%sms/delete'] = array(
     'title' => 'Delete',
     'page callback' => 'drupal_get_form',
@@ -117,42 +117,42 @@ function sms_panel_ui_menu() {
     'weight' => 4,
     'type' => MENU_LOCAL_TASK,
   );
-  
+
   $items['sms/gateway/autocomplete'] = array(
     'title' => 'SMS gateway autocomplete',
     'page callback' => 'sms_gateway_autocomplete',
     'access arguments' => array('administer sms panel'),
     'file' => 'sms_panel_ui.inc',
-    'type' => MENU_CALLBACK,    
+    'type' => MENU_CALLBACK,
   );
-  
+
   $items['sms/number/autocomplete'] = array(
     'title' => 'SMS number autocomplete',
     'page callback' => 'sms_number_autocomplete',
     'access arguments' => array('administer sms panel'),
     'file' => 'sms_panel_ui.inc',
-    'type' => MENU_CALLBACK,    
+    'type' => MENU_CALLBACK,
   );
-  
+
   $items['sms/numbers/autocomplete'] = array(
     'title' => 'Multi SMS number autocomplete',
     'page callback' => 'sms_numbers_autocomplete',
     'access arguments' => array('administer sms panel'),
     'file' => 'sms_panel_ui.inc',
-    'type' => MENU_CALLBACK,    
+    'type' => MENU_CALLBACK,
   );
-  
+
   $items['sms/users/autocomplete'] = array(
     'title' => 'Multi SMS user autocomplete',
     'page callback' => 'sms_users_autocomplete',
     'access arguments' => array('administer sms panel'),
     'file' => 'sms_panel_ui.inc',
-    'type' => MENU_CALLBACK,    
+    'type' => MENU_CALLBACK,
   );
-  
-  // Outgoing and Incoming menus
+
+  // Outgoing and Incoming menu items
   // will be created via Views, your majesty!
-  
+
   return $items;
 }
 
@@ -173,23 +173,23 @@ function sms_panel_ui_form_alter(&$form, $form_state, $form_id) {
     'number_1' => 'sms/number/autocomplete',
     'gateway' => 'sms/gateway/autocomplete',
   );
-  
+
   if (in_array($form_state['view']->name, $views_to_alter)) {
     // Adding exposed form CSS hacks.
     drupal_add_css(drupal_get_path('module', 'sms_panel_ui') . '/css/views-exposed-in-fieldset.css', 'module');
-      
+
     // Set autocomplete widgets.
     foreach ($autocomplete_widgets as $field => $handler) {
       $form[$field]['#autocomplete_path'] = $handler;
     }
-    
+
     // Wrap views exposed filter fields in a fieldset.
-    if (!module_exists('views_exposed_in_fieldset')) {            
+    if (!module_exists('views_exposed_in_fieldset')) {
       // Prepare the form and fields.
       $fieldset = $form_id . '_fieldset';
       $fields = element_children($form);
       unset($fields['form_build_id'], $fields['form_token'], $fields['form_id']);
-      
+
       // Build the new fieldset.
       $form[$fieldset] = array(
         '#type' => 'fieldset',
@@ -197,13 +197,13 @@ function sms_panel_ui_form_alter(&$form, $form_state, $form_id) {
         '#collapsible' => TRUE,
         '#collapsed' => TRUE,
       );
-      
+
       // Move the keys to the new fieldset.
       foreach ($fields as $field) {
         $form[$fieldset][$field] = $form[$field];
         unset($form[$field]);
       }
-      
+
       // Move field labels from [#info] array and flush.
       foreach ($form['#info'] as $key => $info) {
         $form[$fieldset][$info['value']]['#title'] = $form[$fieldset][$info['operator']]['#title'] = $info['label'];
@@ -248,11 +248,11 @@ function sms_panel_ui_callback_sms_actions_access($sms, $op, $perm) {
   if (!user_access($perm)) {
     return FALSE;
   }
-  
+
   switch ($sms->direction) {
     case SMS_PANEL_IN:
       return ($op == 'resend') ? FALSE : TRUE;
-      
+
     case SMS_PANEL_OUT:
       return ($op == 'reply') ? FALSE : TRUE;
   }
@@ -273,10 +273,11 @@ function sms_url($sid, $type = 'admin') {
   if (is_object($sid)) {
     $sid = $sid->sid;
   }
-  
+
   switch ($type) {
     case 'admin':
       return 'admin/smsframework/panel/sms/' . $sid;
+    // TODO: Add other cases.
   }
 }
 

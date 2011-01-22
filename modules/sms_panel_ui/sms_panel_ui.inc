@@ -33,14 +33,14 @@ function sms_panel_ui_page_sms($sms) {
 function sms_panel_ui_theme_number($number, $show_username) {
   $uid = sms_user_get_uid($number);
   if (!$uid) {
-    return $number;    
+    return $number;
   }
-  
+
   if ($show_username) {
     $user = user_load($uid);
     $number = $number . ' (' . $user->name . ')';
   }
-  
+
   return l($number, 'user/' . $uid);
 }
 
@@ -59,10 +59,10 @@ function sms_panel_ui_callback_sms_actions($sms, $op) {
   switch ($op) {
     case 'reply':
       return drupal_get_form('sms_panel_ui_form_sms_send', $sms->number, NULL);
-      
+
     case 'resend':
       return drupal_get_form('sms_panel_ui_form_sms_send', $sms->number, $sms->message);
-    
+
     case 'forward':
       return drupal_get_form('sms_panel_ui_form_sms_send', NULL, $sms->message);
   }
@@ -76,65 +76,56 @@ function sms_panel_ui_callback_sms_actions($sms, $op) {
  */
 function sms_panel_ui_form_configure() {
   $form = array();
-  
+
   $form['general_settings'] = array(
     '#type' => 'fieldset',
     '#title' => t('General'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   );
-  
+
   $form['dashboard_settings'] = array(
     '#type' => 'fieldset',
     '#title' => t('Dashboard'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   );
-  
+
   $form['autorespond_settings'] = array(
     '#type' => 'fieldset',
     '#title' => t('Autorespond'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   );
-  
+
   $form['autoforward_settings'] = array(
     '#type' => 'fieldset',
     '#title' => t('Autoforward'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   );
-  
+
   $form['signature_settings'] = array(
     '#type' => 'fieldset',
     '#title' => t('Signature'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   );
-  
+
   $form['template_settings'] = array(
     '#type' => 'fieldset',
     '#title' => t('Templates'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   );
-  
+
   $form['lists_settings'] = array(
     '#type' => 'fieldset',
     '#title' => t('Lists'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   );
-    
-  if (module_exists('sms_panel_ui_datepicker')) {
-    $form['datepicker_settings'] = array(
-      '#type' => 'fieldset',
-      '#title' => t('Datepicker'),
-      '#collapsible' => TRUE,
-      '#collapsed' => TRUE,
-    );
-  }
-  
+
   return system_settings_form($form);
 }
 
@@ -162,34 +153,34 @@ function sms_panel_ui_form_sms_send(&$form_state, $number = NULL, $message = NUL
     '#description' => t('Choose which users and/or phone numbers to send the SMS message to.'),
     '#collapsible' => TRUE,
     '#collapsed' => FALSE,
-  );    
-  
+  );
+
   $form['number']['#title'] = t('Recipient numbers');
   $form['number']['#autocomplete_path'] = 'sms/numbers/autocomplete';
   $form['number']['#default_value'] = (is_null($number) || empty($number)) ? '' : $number;
   $form['number']['#description'] = t('Enter a comma separated list of valid phone numbers to send the SMS message to.');
   $form['recipients']['number'] = $form['number'];
   unset($form['number']);
-  
+
   $form['recipients']['user'] = array(
     '#type' => 'textfield',
     '#title' => t('Recipient users'),
     '#description' => t('Enter a comma separated list of phone activated users to send the SMS message to.'),
     '#autocomplete_path' => 'sms/users/autocomplete',
   );
-  
+
   $form['message'] = array(
     '#type' => 'textarea',
     '#title' => t('SMS Message'),
     '#description' => t('SMS text message to send.'),
     '#default_value' => is_null($message) ? '' : check_plain($message),
   );
-  
+
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Send'),
   );
-  
+
   return $form;
 }
 
@@ -201,12 +192,12 @@ function sms_panel_ui_form_sms_send_validate($form, &$form_state) {
     form_set_error('message', t('Please fill out the SMS message.'));
     return;
   }
-  
+
   if (empty($form_state['values']['number']) && empty($form_state['values']['user'])) {
     form_set_error('number', t('As a minimum, you need to set a number or user as recipient.'));
     return;
   }
-  
+
   // Validate recipient numbers.
   // TODO: Validate the number using the smsframework's
   // sms_validate_number() when it's fixed in its coming verison.
@@ -217,9 +208,9 @@ function sms_panel_ui_form_sms_send_validate($form, &$form_state) {
       form_set_error('number', t('!number is not a valid phone number.', array('!number' => $number)));
     }
   }
-  
+
   // Validate recipient users.
-  $query = "SELECT u.name, su.number 
+  $query = "SELECT u.name, su.number
             FROM {sms_user} su
             LEFT JOIN {users} u ON su.uid = u.uid
             WHERE su.status = 2 AND u.name = '%s'";
@@ -243,7 +234,7 @@ function sms_panel_ui_form_sms_send_validate($form, &$form_state) {
 function sms_panel_ui_form_sms_send_submit($form, &$form_state) {
   $form_state['values']['number'] = array_filter($form_state['values']['number']);
   $form_state['values']['number'] = array_unique($form_state['values']['number']);
-  
+
   foreach ($form_state['values']['number'] as $number) {
     sms_send($number, $form_state['values']['message']);
   }
@@ -262,7 +253,7 @@ function sms_panel_ui_form_sms_send_submit($form, &$form_state) {
  */
 function sms_panel_ui_form_sms_info(&$form_state, $sms) {
   $form = array();
-  
+
   $form['sms_info'] = array(
     '#type' => 'fieldset',
     '#title' => t('Message information'),
@@ -270,51 +261,51 @@ function sms_panel_ui_form_sms_info(&$form_state, $sms) {
     '#collapsible' => TRUE,
     '#collapsed' => FALSE,
   );
-  
+
   $form['sms_info']['sms_info_sid'] = array(
     '#type' => 'item',
     '#title' => t('SMS ID'),
     '#value' => $sms->sid,
-  );      
-  
+  );
+
   $sms_user = $sms->uid ? user_load($sms->uid) : t('System');
   $form['sms_info']['sms_info_user'] = array(
     '#type' => 'item',
     '#title' => is_object($sms_user) ? t('Sender') : t('Recipient'),
     '#value' => is_object($sms_user) ? l($sms_user->name, 'user/' . $sms_user->uid) : $sms_user,
   );
-    
+
   $form['sms_info']['sms_info_number'] = array(
     '#type' => 'item',
     '#title' => $sms->direction ? t('Recipient') : t('Sender'),
     '#value' => theme('sms_number', $sms->number, TRUE),
   );
-  
+
   $form['sms_info']['sms_info_direction'] = array(
     '#type' => 'item',
     '#title' => t('SMS Direction'),
     '#value' => $sms->direction ? t('Outgoing') : t('Incoming'),
   );
-  
+
   $form['sms_info']['sms_info_timestamp'] = array(
     '#type' => 'item',
     '#title' => $sms->direction ? t('Sent Date') : t('Receive Date'),
     '#value' => format_date($sms->timestamp, 'long'),
   );
-  
+
   $form['sms_info']['sms_info_gateway'] = array(
     '#type' => 'item',
     '#title' => $sms->direction ? t('Sent through') : t('Received via'),
     '#value' => $sms->gateway . ' ' . t('gateway'),
   );
-  
+
   $form['sms_info']['sms_info_message'] = array(
-    '#type' => 'markup', 
+    '#type' => 'markup',
     '#prefix' => '<div class="form-item sms-info-message-wrapper">',
     '#value' => '<label>' . t('Message text:') . '</label><div class="sms-info-message">' . $sms->message . '</div>',
     '#suffix' => '</div>',
   );
-    
+
   $form['buttons']['delete'] = array(
     '#type' => 'button',
     '#value' => t('Delete'),
@@ -327,7 +318,7 @@ function sms_panel_ui_form_sms_info(&$form_state, $sms) {
  * Form validation callback for SMS message info page.
  */
 function sms_panel_ui_form_sms_info_validate($form, &$form_state) {
-  // TODO: Find a better way to go to delete confirm page.
+  // TODO: If possible, find a better way to go to confirmation page.
   if ($form_state['values']['op'] == t('Delete')) {
     drupal_goto(sms_url($form['sms_info']['sms_info_sid']['#value']) . '/delete');
     exit();
@@ -339,7 +330,7 @@ function sms_panel_ui_form_sms_info_validate($form, &$form_state) {
  */
 function sms_panel_ui_sms_delete_confirm(&$form_state, $sms) {
   $form = array();
-  
+
   $form['sid'] = array(
     '#type' => 'value',
     '#value' => $sms,
@@ -388,11 +379,11 @@ function sms_number_autocomplete($string = '') {
  */
 function sms_numbers_autocomplete($string = '') {
   $matches = array();
-  
+
   if ($string) {
     $numbers = explode(',', $string);
     $numbers = array_map('trim', $numbers);
-    
+
     $number = array_pop($numbers);
     $query = "SELECT su.number
               FROM {sms_user} su
@@ -422,11 +413,11 @@ function sms_numbers_autocomplete($string = '') {
  */
 function sms_users_autocomplete($string = '') {
   $matches = array();
-  
+
   if ($string) {
     $names = explode(',', $string);
     $names = array_map('trim', $names);
-    
+
     $name = array_pop($names);
     $query = "SELECT u.name
               FROM {sms_user} su
@@ -483,6 +474,7 @@ function _sms_gateway_autocomplete_match($array, $search) {
       unset($array[$key]);
     }
   }
-  
+
   return array_keys($array);
 }
+
