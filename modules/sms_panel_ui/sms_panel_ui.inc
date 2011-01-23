@@ -201,8 +201,7 @@ function sms_panel_ui_form_sms_send_validate($form, &$form_state) {
   // Validate recipient numbers.
   // TODO: Validate the number using the smsframework's
   // sms_validate_number() when it's fixed in its coming verison.
-  $form_state['values']['number'] = explode(',', $form_state['values']['number']);
-  $form_state['values']['number'] = array_map('trim', $form_state['values']['number']);
+  $form_state['values']['number'] = array_map('trim', explode(',', $form_state['values']['number']));
   foreach ($form_state['values']['number'] as $number) {
     if ($number != sms_formatter($number)) {
       form_set_error('number', t('!number is not a valid phone number.', array('!number' => $number)));
@@ -214,8 +213,7 @@ function sms_panel_ui_form_sms_send_validate($form, &$form_state) {
             FROM {sms_user} su
             LEFT JOIN {users} u ON su.uid = u.uid
             WHERE su.status = 2 AND u.name = '%s'";
-  $form_state['values']['user'] = explode(',', $form_state['values']['user']);
-  $form_state['values']['user'] = array_map('trim', $form_state['values']['user']);
+  $form_state['values']['user'] = array_map('trim', explode(',', $form_state['values']['user']));
   foreach ($form_state['values']['user'] as $username) {
     $account = db_fetch_object(db_query($query, $username));
     if ($account->name != $username) {
