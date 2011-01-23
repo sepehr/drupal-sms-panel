@@ -33,7 +33,7 @@ function sms_panel_bulk_form_compose() {
     '#type' => 'checkboxes',
     '#title' => t('Recipient User Roles'),
     '#description' => t('Check which user roles you want to include as SMS recipients.'),
-    '#options' => _sms_panel_bulk_form_helper('roles'),
+    '#options' => _sms_panel_bulk_field_options('roles'),
     '#return_value' => 1,
   );
 
@@ -49,7 +49,7 @@ function sms_panel_bulk_form_compose() {
     '#type' => 'checkboxes',
     '#title' => t('Recipient User Queues'),
     '#description' => t('Check queues you want to include all of its users as SMS recipients.'),
-    '#options' => _sms_panel_bulk_form_helper('queues'),
+    '#options' => _sms_panel_bulk_field_options('queues'),
     '#return_value' => 1,
   );
 
@@ -63,7 +63,7 @@ function sms_panel_bulk_form_compose() {
 
   $form['recipients']['individuals']['sms_panel_bulk_recipients_users'] = array(
     '#type' => 'checkboxes',
-    '#options' => _sms_panel_bulk_form_helper('users'),
+    '#options' => _sms_panel_bulk_field_options('users'),
     '#return_value' => 1,
   );
 
@@ -194,7 +194,7 @@ function theme_sms_panel_bulk_form_compose($form) {
 }
 
 /**
- * Helper function to generate required data for bulk compose form.
+ * Helper function to generate required options data for bulk compose form.
  *
  * @param $type
  *   Type of the requested data:
@@ -205,18 +205,31 @@ function theme_sms_panel_bulk_form_compose($form) {
  * @return
  *   Either the requested data (mixed) or FALSE on fail.
  */
-function _sms_panel_bulk_form_helper($type) {
+function _sms_panel_bulk_field_options($type) {
   switch ($type) {
     case 'roles':
-      return user_roles(TRUE);
+      $roles = array();
+      foreach (user_roles(TRUE) as $rid => $name) {
+        $count = db_result(db_query("SELECT COUNT(uid) FROM {users_roles} WHERE rid = '%d'", $rid));
+        if ($count > 0) {
+          $roles[$rid] = ucwords($name) . ' ' . t('<small>(!count)</small>',
+            array('!count' => format_plural($count, 'one user', '@count users'))
+          );
+        }
+      }
+      return $roles;
 
     case 'queues':
       $queues = array();
-      $queue_objects = userqueue_load_queues(FALSE);
+      $queue_objects = userqueue_load_queues(TRUE);
       foreach ($queue_objects as $queue) {
-        $queues[$queue->uqid] = $queue->title;
+        $count = count($queue->users);
+        if ($count > 0) {
+          $queues[$queue->uqid] = ucwords($queue->title) . ' ' . t('<small>(!count)</small>',
+            array('!count' => format_plural($count, 'one user', '@count users'))
+          );
+        }
       }
-
       return $queues;
 
     case 'users':
@@ -226,7 +239,6 @@ function _sms_panel_bulk_form_helper($type) {
         $user = user_load($uid->uid);
         $sms_users[$uid->uid] = check_plain($user->name);
       }
-
       return $sms_users;
   }
 
@@ -243,10 +255,12 @@ function _sms_panel_bulk_form_helper($type) {
  *   Count of selected recipients including users, roles, userqueues, etc.
  */
 function _sms_panel_bulk_count_recipients($values) {
-  $values['sms_panel_bulk_recipients_numbers'] = array_map('trim', explode(
+  $values['sms_pquaanel_bulk_recipients_numbers'] = array_map('trim', explode(
     ',',
     $values['sms_panel_bulk_recipients_numbers']
   ));
+
+  // Calculate recipient selection count, not the exact number quantity.
   return _sms_panel_bulk_count_checkboxes($values['sms_panel_bulk_recipients_roles'])  +
          _sms_panel_bulk_count_checkboxes($values['sms_panel_bulk_recipients_users'])  +
          _sms_panel_bulk_count_checkboxes($values['sms_panel_bulk_recipients_queues']) +
