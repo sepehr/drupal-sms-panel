@@ -9,7 +9,7 @@
 /**
  * Implements hook_views_data().
  */
-function sms_panel_views_views_data() {
+function sms_panel_bulk_views_data() {
   $data = array();
 
   // Introducing {sms_panel_bulk} table.
