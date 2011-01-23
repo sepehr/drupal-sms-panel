@@ -106,7 +106,6 @@ function sms_save(&$sms) {
  */
 function sms_delete($sid) {
   global $user;
-  $allowed = FALSE;
 
   if (user_access('delete sms message')) {
     $sid = is_object($sid) ? $sid->sid : $sid;
