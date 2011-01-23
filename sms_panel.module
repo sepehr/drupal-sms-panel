@@ -185,7 +185,6 @@ function sms_load($params = array(), $fields = array(), $flush = FALSE) {
   while ($sms_object = db_fetch_object($results)) {
     $sms[] = $sms_object;
   }
-  unset($results);
 
   // Remove the array wrapper, if there were only one result.
   $count = count($sms);
