@@ -240,6 +240,10 @@ function sms_panel_bulk_form_compose_submit($form, &$form_state) {
  *   An array of target numbers.
  * @param $message
  *   SMS text message.
+ * @param $context
+ *   Batch operation context.
+ *
+ * @todo Move down.
  */
 function _sms_panel_bulk_batch_init($numbers, $message, &$context) {
   $context['results']['count'] = 0;
@@ -254,6 +258,15 @@ function _sms_panel_bulk_batch_init($numbers, $message, &$context) {
 
 /**
  * Finish callback for bulk SMS sending batch operation.
+ *
+ * @param $success
+ *   Boolean value indicating the operation status.
+ * @param $results
+ *   Data stored in $context['result'] during the operation.
+ * @param $operations
+ *   An array of performed operations.
+ *
+ * @todo Move down.
  */
 function _sms_panel_bulk_batch_finish($success, $results, $operations) {
   if ($success) {
