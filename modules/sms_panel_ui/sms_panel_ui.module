@@ -189,7 +189,7 @@ function sms_panel_ui_form_alter(&$form, $form_state, $form_id) {
 
   if (in_array($form_state['view']->name, $views_to_alter)) {
     // Adding exposed form CSS hacks.
-    drupal_add_css(drupal_get_path('module', 'sms_panel_ui') . '/css/views-exposed-in-fieldset.css', 'module');
+    drupal_add_css(drupal_get_path('module', 'sms_panel_ui') . '/css/views-fieldset-exposure.css', 'module');
 
     // Set autocomplete widgets.
     foreach ($autocomplete_widgets as $field => $handler) {
@@ -197,7 +197,7 @@ function sms_panel_ui_form_alter(&$form, $form_state, $form_id) {
     }
 
     // Wrap views exposed filter fields in a fieldset.
-    if (!module_exists('views_exposed_in_fieldset')) {
+    if (!module_exists('views_fieldset_exposure')) {
       // Prepare the form and fields.
       $fieldset = $form_id . '_fieldset';
       $fields = element_children($form);
