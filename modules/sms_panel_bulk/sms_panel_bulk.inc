@@ -115,7 +115,7 @@ function sms_panel_bulk_form_compose() {
     '#type' => 'textarea',
     '#title' => t('SMS Message'),
     '#description' => t('SMS text message to send.'),
-    '#required' => TRUE,
+#    '#required' => TRUE,
   );
 
   $form['sms_panel_bulk_note'] = array(
@@ -134,13 +134,22 @@ function sms_panel_bulk_form_compose() {
 
 /**
  * Validation callback for bulk SMS compose form.
- *
- * @todo Validate exact recipients quantity.
  */
 function sms_panel_bulk_form_compose_validate($form, &$form_state) {
-  // Check minimum number of selected recipients.
+  // Check number of selected recipients.
+  // roles, queues, users and numbers. all.
   if (!_sms_panel_bulk_count_recipients($form_state['values'])) {
     form_set_error('sms_panel_bulk_recipients_roles', t('You need to specify one recipient role, queue, user or number at least.'));
+  }
+
+  // Validate recipient numbers.
+  // TODO: Validate the number using the smsframework's
+  // sms_validate_number() when it's fixed in its coming verison.
+  $form_state['values']['number'] = array_map('trim', explode(',', $form_state['values']['number']));
+  foreach ($form_state['values']['number'] as $number) {
+    if ($number != sms_formatter($number)) {
+      form_set_error('sms_panel_bulk_recipients_numbers', t('!number is not a valid phone number.', array('!number' => $number)));
+    }
   }
 }
 
@@ -148,7 +157,128 @@ function sms_panel_bulk_form_compose_validate($form, &$form_state) {
  * Submission callback for bulk SMS compose form.
  */
 function sms_panel_bulk_form_compose_submit($form, &$form_state) {
+  $numbers = array();
 
+  // Process user roles.
+  $selections = _sms_panel_bulk_checkboxes_selections($form_state['values']['sms_panel_bulk_recipients_roles'], FALSE);
+  if (!empty($selections)) {
+    foreach ($selections as $rid) {
+      $results = db_query("SELECT number FROM {users_roles} ur
+                          LEFT JOIN {sms_user} su ON ur.uid = su.uid
+                          WHERE ur.rid = '%d' AND su.delta = 0 AND su.status = 2", $rid);
+      while ($recipient = db_fetch_object($results)) {
+        $numbers[] = $recipient->number;
+      }
+    }
+    // Manual garbage collecting.
+    // TODO: Profile and see if it's necessary.
+    unset($recipient, $results, $rid);
+  }
+
+  // Process user queues.
+  $selections = _sms_panel_bulk_checkboxes_selections($form_state['values']['sms_panel_bulk_recipients_queues'], FALSE);
+  if (!empty($selections)) {
+    foreach ($selections as $uqid) {
+      $queue_users = userqueue_get_users($uqid, TRUE);
+
+      foreach ($queue_users as $uid => $queue_user) {
+        if ($queue_user->sms_user[0]['number'] && $queue_user->sms_user[0]['status'] == 2) {
+          $numbers[] = $queue_user->sms_user[0]['number'];
+        }
+      }
+    }
+    // Manual garbage collecting.
+    // TODO: Profile and see if it's necessary.
+    unset($queue_users, $queue_user, $uqid);
+  }
+
+  // Process individual users.
+  $selections = _sms_panel_bulk_checkboxes_selections($form_state['values']['sms_panel_bulk_recipients_users'], FALSE);
+  if (!empty($selections)) {
+    foreach ($selections as $uid) {
+      $numbers[] = user_load($uid)->sms_user[0]['number'];
+    }
+  }
+  // From now on garbage collecting would be expensive for sure, stop!
+
+  // TODO: Save the new userqueue if requested so.
+
+  // Process anonymous numbers.
+  $selections = array_map('trim', explode(',', $form_state['values']['sms_panel_bulk_recipients_numbers']));
+  foreach ($selections as $number) {
+    $numbers[] = $number;
+  }
+
+  // Remove empties and dupes.
+  $numbers = array_unique(array_filter($numbers));
+
+  // Batch Dispatch.
+  // TODO: Provide the option to dispatch the operation on cron via job_queue.
+  if (!empty($numbers) && is_array($numbers)) {
+    $batch = array(
+      'operations' => array(),
+      'title' => t('Bulk SMS Sending...'),
+      'finished' => '_sms_panel_bulk_batch_finish',
+      'init_message' => t('Dispatching bulk SMS send operation...'),
+      'error_message' => t('An error occured while sending bulk SMS messages.'),
+      'progress_message' => t('@current out of @total messages has been sent.'),
+    );
+
+    // Attach the operation.
+    $batch['operations'][] = array('_sms_panel_bulk_batch_init',
+      array($numbers, $form_state['values']['sms_panel_bulk_message'])
+    );
+
+    batch_set($batch);
+  }
+}
+
+/**
+ * Bulk SMS dispatcher used as a batch operation.
+ *
+ * @param $numbers
+ *   An array of target numbers.
+ * @param $message
+ *   SMS text message.
+ */
+function _sms_panel_bulk_batch_init($numbers, $message, &$context) {
+  $context['results']['count'] = 0;
+  foreach ($numbers as $number) {
+    sms_send($number, $message);
+    ++$context['results']['count'];
+  }
+
+  // Done.
+  $context['finished'] = 1;
+}
+
+/**
+ * Finish callback for bulk SMS sending batch operation.
+ */
+function _sms_panel_bulk_batch_finish($success, $results, $operations) {
+  if ($success) {
+    drupal_set_message(t('!count SMS messages has been sent successfully.',
+      array('!count' => $results['count'])
+    ));
+
+    watchdog('sms_panel_bulk', '!count SMS messages has been sent successfully via Batch API.', array(
+      '!count' => $results['count']
+    ), WATCHDOG_NOTICE);
+  }
+
+  // Fuckin' failed.
+  else {
+    $error_operation = reset($operations);
+    drupal_set_message(t('An error occurred while processing %error_operation with arguments: @arguments', array(
+      '%error_operation' => $error_operation[0],
+      '@arguments' => print_r($error_operation[1], TRUE)
+    )), 'error');
+
+    watchdog('sms_panel_bulk', 'An error occurred while batch processing %error_operation with arguments: @arguments', array(
+      '%error_operation' => $error_operation[0],
+      '@arguments' => print_r($error_operation[1], TRUE)
+    ), WATCHDOG_ERROR);
+  }
 }
 
 /**
@@ -234,7 +364,7 @@ function _sms_panel_bulk_field_options($type) {
 
     case 'users':
       $sms_users = array();
-      $results = db_query("SELECT uid FROM {sms_user} WHERE status = '2'");
+      $results = db_query("SELECT uid FROM {sms_user} WHERE status = 2");
       while ($uid = db_fetch_object($results)) {
         $user = user_load($uid->uid);
         $sms_users[$uid->uid] = check_plain($user->name);
@@ -261,10 +391,10 @@ function _sms_panel_bulk_count_recipients($values) {
   ));
 
   // Calculate recipient selection count, not the exact number quantity.
-  return _sms_panel_bulk_count_checkboxes($values['sms_panel_bulk_recipients_roles'])  +
-         _sms_panel_bulk_count_checkboxes($values['sms_panel_bulk_recipients_users'])  +
-         _sms_panel_bulk_count_checkboxes($values['sms_panel_bulk_recipients_queues']) +
-         _sms_panel_bulk_count_checkboxes($values['sms_panel_bulk_recipients_numbers']);
+  return count($values['sms_panel_bulk_recipients_numbers']) +
+         _sms_panel_bulk_checkboxes_selections($values['sms_panel_bulk_recipients_roles']) +
+         _sms_panel_bulk_checkboxes_selections($values['sms_panel_bulk_recipients_users']) +
+         _sms_panel_bulk_checkboxes_selections($values['sms_panel_bulk_recipients_queues']);
 }
 
 /**
@@ -272,16 +402,23 @@ function _sms_panel_bulk_count_recipients($values) {
  *
  * @param $array
  *   An array of checkbox values.
+ * @param $count
+ *   Whether to return the count or selections themeselves.
  *
  * @return
  *   The count of selected checkboxes.
  */
-function _sms_panel_bulk_count_checkboxes($array) {
-  return intval(count(array_filter($array,
+function _sms_panel_bulk_checkboxes_selections($array, $count = TRUE) {
+  if (!is_array($array)) {
+    return 0;
+  }
+
+  $selecions = array_filter($array,
     create_function(
       '$checkbox_value',
       'return $checkbox_value != 0;'
-    ))
-  ));
+    )
+  );
+  return $count ? intval(count($selecions)) : $selecions;
 }
 
