@@ -37,9 +37,21 @@ function sms_panel_bulk_menu() {
 }
 
 /**
+ * Implements hook_theme().
+ */
+function sms_panel_bulk_theme() {
+  return array(
+    'sms_panel_bulk_form_compose' => array(
+      'argument' => array('form' => NULL),
+      'file' => 'sms_panel_bulk.inc',
+    ),
+  );
+}
+
+/**
  * Implements hook_views_api().
  */
-function sms_panel_views_api() {
+function sms_panel_bulk_views_api() {
   return array(
     'api' => 2.0,
     'path' => drupal_get_path('module', 'sms_panel_bulk') . '/views',
