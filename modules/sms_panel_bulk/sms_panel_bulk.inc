@@ -290,6 +290,13 @@ function sms_panel_bulk_form_compose_submit($form, &$form_state) {
     return;
   }
 
+  // Save the log.
+  $bulk = new stdClass();
+  $bulk->note = $form_state['values']['sms_panel_bulk_note'];
+  $bulk->message = $form_state['values']['sms_panel_bulk_message'];
+  $bulk->recipients = serialize($numbers);
+  sms_bulk_save($bulk);
+
   // Batch Dispatch.
   // TODO: Provide the option to dispatch the operation on cron via job_queue.
   $batch = array(
@@ -315,7 +322,7 @@ function sms_panel_bulk_form_compose_submit($form, &$form_state) {
  *
  * @todo
  * - Add tablesort ability.
- * - Add table pagination.
+ * - Add table pagination while preserving selections.
  */
 function theme_sms_panel_bulk_form_compose($form) {
   if (isset($form['recipients']['individuals']['sms_panel_bulk_recipients_users']) &&
