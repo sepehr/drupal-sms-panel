@@ -58,3 +58,34 @@ function sms_panel_bulk_views_api() {
   );
 }
 
+/**
+ * API function to save a bulk sms send log.
+ *
+ * @param $bulk
+ *   SMS object to be saved.
+ */
+function sms_bulk_save(&$bulk) {
+  $bulk = (object) $bulk;
+
+  // Check if the timestamp is set.
+  if (!$bulk->timestamp) {
+    $bulk->timestamp = time();
+  }
+  // Check whether the SMS gateway is set or not.
+  if (!$bulk->gateway) {
+    $gateway = sms_default_gateway();
+    $bulk->gateway = $gateway['identifier'];
+  }
+  // Check if the sender is set.
+  if (!$bulk->uid) {
+    global $user;
+    $bulk->uid = $user->uid;
+  }
+  // Check recipients format.
+  if (is_array($bulk->recipients)) {
+    $bulk->recipients = serialize($bulk->recipients);
+  }
+
+  drupal_write_record('sms_panel_bulk', $bulk);
+}
+
