@@ -151,6 +151,11 @@ function sms_panel_bulk_form_compose_validate($form, &$form_state) {
       form_set_error('sms_panel_bulk_recipients_numbers', t('!number is not a valid phone number.', array('!number' => $number)));
     }
   }
+
+  if ($form_state['values']['sms_panel_bulk_individuals_queue'] &&
+      empty($form_state['values']['sms_panel_bulk_individuals_queue_name'])) {
+    form_set_error('sms_panel_bulk_individuals_queue_name', t('You need to specify a user queue name in order to save your selections.'));
+  }
 }
 
 /**
@@ -198,13 +203,33 @@ function sms_panel_bulk_form_compose_submit($form, &$form_state) {
   // Process individual users.
   $selections = _sms_panel_bulk_checkboxes_selections($form_state['values']['sms_panel_bulk_recipients_users'], FALSE);
   if (!empty($selections)) {
-    foreach ($selections as $uid) {
-      $numbers[] = user_load($uid)->sms_user[0]['number'];
-    }
-  }
-  // From now on garbage collecting would be expensive for sure!
+    // Create a new userqueue if requested so.
+    if ($form_state['values']['sms_panel_bulk_individuals_queue']) {
+      $queue = new stdClass();
+      $queue->size = 0;
+      $queue->title = $form_state['values']['sms_panel_bulk_individuals_queue_name'];
+      drupal_write_record('userqueue', $queue);
 
-  // TODO: Save the new userqueue if requested so.
+      // Get the new queue ID.
+      $queue->uqid = db_result(db_query("SELECT LAST_INSERT_ID()"));
+    }
+
+    // Per each selection, save the number
+    // and add the uselection to new queue if available.
+    foreach ($selections as $uid) {
+      $user = user_load($uid);
+      $numbers[] = $user->sms_user[0]['number'];
+
+      // Add user to the new queue.
+      if ($queue->uqid) {
+        $queue_user = new stdClass();
+        $queue_user->uid = $user->uid;
+        $queue_user->uqid = $queue->uqid;
+        drupal_write_record('userqueue_user', $queue_user);
+      }
+    }
+    unset($queue, $uid, $user, $queue_user);
+  }
 
   // Process anonymous numbers.
   $selections = array_map('trim', explode(',', $form_state['values']['sms_panel_bulk_recipients_numbers']));
@@ -226,7 +251,7 @@ function sms_panel_bulk_form_compose_submit($form, &$form_state) {
     'title' => t('Bulk SMS Sending...'),
     'init_message' => t('Dispatching bulk SMS send operation...'),
     'error_message' => t('An error occured while sending bulk SMS messages.'),
-    'progress_message' => t('@current out of @total bulk SMS messages has been sent.'),
+    'progress_message' => t('@current out of @total messages has been sent.'),
   );
 
   // Attach the sms_send operations.
