@@ -10,6 +10,8 @@
  * Implements hook_views_default_views().
  */
 function sms_panel_views_views_default_views() {
+  $views = array();
+
   /**
    * sms_panel_incoming default view.
    */
@@ -1065,21 +1067,22 @@ function sms_panel_views_views_default_views() {
     'default' => '-1',
   ));
   $handler = $view->new_display('page', 'Page', 'page_1');
-  $handler->override_option('path', 'admin/smsframework/panel/outgoing');
+  $handler->override_option('path', 'admin/smsframework/panel/outgoing/singular');
   $handler->override_option('menu', array(
-    'type' => 'tab',
-    'title' => 'Outgoing',
+    'type' => 'default tab',
+    'title' => 'All',
     'description' => 'Outgoing SMS messages.',
-    'weight' => '1',
+    'weight' => '0',
     'name' => 'navigation',
   ));
   $handler->override_option('tab_options', array(
-    'type' => 'none',
-    'title' => '',
+    'type' => 'tab',
+    'title' => 'Outgoing',
     'description' => '',
-    'weight' => 0,
+    'weight' => '0',
     'name' => 'navigation',
   ));
+
 
   $views[$view->name] = $view;
 
