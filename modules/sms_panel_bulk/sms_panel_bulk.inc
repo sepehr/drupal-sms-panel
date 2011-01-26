@@ -29,13 +29,26 @@ function sms_panel_bulk_form_compose() {
     '#collapsed' => TRUE,
   );
 
-  $form['recipients']['roles']['sms_panel_bulk_recipients_roles'] = array(
-    '#type' => 'checkboxes',
-    '#title' => t('Recipient User Roles'),
-    '#description' => t('Check which user roles you want to include as SMS recipients.'),
-    '#options' => _sms_panel_bulk_field_options('roles'),
-    '#return_value' => 1,
-  );
+  $options = _sms_panel_bulk_field_options('roles');
+  if (!empty($options)) {
+    $form['recipients']['roles']['sms_panel_bulk_recipients_roles'] = array(
+      '#type' => 'checkboxes',
+      '#title' => t('Recipient User Roles'),
+      '#description' => t('Check which user roles you want to include as SMS recipients.'),
+      '#options' => $options,
+      '#return_value' => 1,
+    );
+  }
+  // There were no roles defined.
+  else {
+    $form['recipients']['roles']['sms_panel_bulk_recipients_roles_notice'] = array(
+      '#type' => 'item',
+      '#title' => t('Notice'),
+      '#value' => t('There were no user roles defined in this system. You might want to <a href="!link">add one</a>.',
+        array('!link' => url('admin/user/roles'))
+      ),
+    );
+  }
 
   // User queues.
   $form['recipients']['queues'] = array(
@@ -45,13 +58,26 @@ function sms_panel_bulk_form_compose() {
     '#collapsed' => TRUE,
   );
 
-  $form['recipients']['queues']['sms_panel_bulk_recipients_queues'] = array(
-    '#type' => 'checkboxes',
-    '#title' => t('Recipient User Queues'),
-    '#description' => t('Check queues you want to include all of its users as SMS recipients.'),
-    '#options' => _sms_panel_bulk_field_options('queues'),
-    '#return_value' => 1,
-  );
+  $options = _sms_panel_bulk_field_options('queues');
+  if (!empty($options)) {
+    $form['recipients']['queues']['sms_panel_bulk_recipients_queues'] = array(
+      '#type' => 'checkboxes',
+      '#title' => t('Recipient User Queues'),
+      '#description' => t('Check queues you want to include all of its users as SMS recipients.'),
+      '#options' => $options,
+      '#return_value' => 1,
+    );
+  }
+  // There were no userqueues.
+  else {
+    $form['recipients']['queues']['sms_panel_bulk_recipients_queues_notice'] = array(
+      '#type' => 'item',
+      '#title' => t('Notice'),
+      '#value' => t('There were no user queues defined. You might want to <a href="!link">define one</a> and then push a few users in.',
+        array('!link' => url('admin/user/userqueue'))
+      ),
+    );
+  }
 
   // Individual users.
   $form['recipients']['individuals'] = array(
@@ -61,38 +87,50 @@ function sms_panel_bulk_form_compose() {
     '#collapsed' => TRUE,
   );
 
-  $form['recipients']['individuals']['sms_panel_bulk_recipients_users'] = array(
-    '#type' => 'checkboxes',
-    '#options' => _sms_panel_bulk_field_options('users'),
-    '#return_value' => 1,
-  );
+  $options = _sms_panel_bulk_field_options('users');
+  if (!empty($options)) {
+    $form['recipients']['individuals']['sms_panel_bulk_recipients_users'] = array(
+      '#type' => 'checkboxes',
+      '#options' => $options,
+      '#return_value' => 1,
+    );
 
-  $form['recipients']['individuals']['sms_panel_bulk_recipients_users_title'] = array(
-    '#type' => 'markup',
-    '#value' => '<div class="form-item"><label>' . t('Individual recipients:') . '</label></div>',
-  );
+    $form['recipients']['individuals']['sms_panel_bulk_recipients_users_title'] = array(
+      '#type' => 'markup',
+      '#value' => '<div class="form-item"><label>' . t('Individual recipients:') . '</label></div>',
+    );
 
-  // Save selected individual users as a new userqueue.
-  $form['recipients']['individuals']['save_queue'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Save User Queue'),
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-    '#prefix' => '<br />',
-  );
+    // Save selected individual users as a new userqueue.
+    $form['recipients']['individuals']['save_queue'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Save User Queue'),
+      '#collapsible' => TRUE,
+      '#prefix' => '<br />',
+    );
 
-  $form['recipients']['individuals']['save_queue']['sms_panel_bulk_individuals_queue'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Save selections as a new user queue named below.'),
-    '#description' => t('If checked selected users will be saved into a user queue.'),
-    '#return_value' => 1,
-  );
+    $form['recipients']['individuals']['save_queue']['sms_panel_bulk_individuals_queue'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Save selections as a new user queue named below.'),
+      '#description' => t('If checked selected users will be saved into a user queue.'),
+      '#return_value' => 1,
+    );
 
-  $form['recipients']['individuals']['save_queue']['sms_panel_bulk_individuals_queue_name'] = array(
-    '#type' => 'textfield',
-    '#title' => t('User Queue Name'),
-    '#description' => t('If checked the above checkbox, this is a mandatory field.'),
-  );
+    $form['recipients']['individuals']['save_queue']['sms_panel_bulk_individuals_queue_name'] = array(
+      '#type' => 'textfield',
+      '#title' => t('User Queue Name'),
+      '#description' => t('If checked the above checkbox, this is a mandatory field.'),
+    );
+  }
+  // There were no verified sms users.
+  else {
+    $form['recipients']['individuals']['sms_panel_bulk_recipients_users_notice'] = array(
+      '#type' => 'item',
+      '#title' => t('Notice'),
+      '#value' => t('There were no user with a verified number.',
+        array('!link' => url('admin/user/userqueue'))
+      ),
+    );
+  }
 
   // Anonymous numbers.
   $form['recipients']['anonymous'] = array(
@@ -152,9 +190,20 @@ function sms_panel_bulk_form_compose_validate($form, &$form_state) {
     }
   }
 
+  // Validate new userqueue creation parameters.
   if ($form_state['values']['sms_panel_bulk_individuals_queue'] &&
       empty($form_state['values']['sms_panel_bulk_individuals_queue_name'])) {
     form_set_error('sms_panel_bulk_individuals_queue_name', t('You need to specify a user queue name in order to save your selections.'));
+  }
+
+  // Check duplicate userqueue names.
+  $queue_names = array();
+  $queues = array_values(userqueue_load_queues(FALSE));
+  foreach ($queues as $queue) {
+    $queue_names[] = strtolower($queue->title);
+  }
+  if (in_array(strtolower($form_state['values']['sms_panel_bulk_individuals_queue_name']), $queue_names)) {
+    form_set_error('sms_panel_bulk_individuals_queue_name', t('There were a user queue created with this name before, please choose another name.'));
   }
 }
 
@@ -174,10 +223,7 @@ function sms_panel_bulk_form_compose_submit($form, &$form_state) {
       while ($recipient = db_fetch_object($results)) {
         $numbers[] = $recipient->number;
       }
-    }foreach ($numbers as $number) {
-    sms_send($number, $message);
-    ++$context['results']['count'];
-  }
+    }
     // Manual garbage collecting.
     // TODO: Profile and see if it's necessary.
     unset($recipient, $results, $rid);
@@ -251,7 +297,7 @@ function sms_panel_bulk_form_compose_submit($form, &$form_state) {
     'title' => t('Bulk SMS Sending...'),
     'init_message' => t('Dispatching bulk SMS send operation...'),
     'error_message' => t('An error occured while sending bulk SMS messages.'),
-    'progress_message' => t('@current out of @total messages has been sent.'),
+    'progress_message' => t('@current out of @total messages has been sent, @remaining remaining. (@percentage%)'),
   );
 
   // Attach the sms_send operations.
@@ -260,6 +306,7 @@ function sms_panel_bulk_form_compose_submit($form, &$form_state) {
       array($number, $form_state['values']['sms_panel_bulk_message'])
     );
   }
+
   batch_set($batch);
 }
 
@@ -271,37 +318,40 @@ function sms_panel_bulk_form_compose_submit($form, &$form_state) {
  * - Add table pagination.
  */
 function theme_sms_panel_bulk_form_compose($form) {
-  $rows = array();
+  if (isset($form['recipients']['individuals']['sms_panel_bulk_recipients_users']) &&
+      !empty($form['recipients']['individuals']['sms_panel_bulk_recipients_users'])) {
+    // Per each checkbox option, remove the title
+    // and move the naked checkbox to a table cell!
+    $rows = array();
+    $options = element_children($form['recipients']['individuals']['sms_panel_bulk_recipients_users']);
 
-  // Per each checkbox option, remove the title
-  // and move the naked checkbox to a table cell!
-  $options = element_children($form['recipients']['individuals']['sms_panel_bulk_recipients_users']);
+    foreach ($options as $uid) {
+      $title = $form['recipients']['individuals']['sms_panel_bulk_recipients_users'][$uid]['#title'];
+      unset($form['recipients']['individuals']['sms_panel_bulk_recipients_users'][$uid]['#title']);
 
-  foreach ($options as $uid) {
-    $title = $form['recipients']['individuals']['sms_panel_bulk_recipients_users'][$uid]['#title'];
-    unset($form['recipients']['individuals']['sms_panel_bulk_recipients_users'][$uid]['#title']);
+      $user = user_load($uid);
+      $rows[] = array(
+        array('data' => drupal_render($form['recipients']['individuals']['sms_panel_bulk_recipients_users'][$uid])),
+        theme('username', $user),
+        check_plain($user->sms_user[0]['number']),
+        check_plain($user->mail),
+        format_date($user->login, 'long'),
+      );
+    }
 
-    $user = user_load($uid);
-    $rows[] = array(
-      array('data' => drupal_render($form['recipients']['individuals']['sms_panel_bulk_recipients_users'][$uid])),
-      theme('username', $user),
-      check_plain($user->sms_user[0]['number']),
-      check_plain($user->mail),
-      format_date($user->login, 'long'),
+    // Table header.
+    $headers = array(
+      '',
+      t('Username'),
+      t('Number'),
+      t('Email Address'),
+      t('Last Login'),
     );
+
+    // Inject the table into the form and render.
+    $form['recipients']['individuals']['sms_panel_bulk_recipients_users_title']['#suffix'] = theme('table', $headers, $rows);
   }
 
-  // Table header.
-  $headers = array(
-    '',
-    t('Username'),
-    t('Number'),
-    t('Email Address'),
-    t('Last Login'),
-  );
-
-  // Inject the table into the form and render.
-  $form['recipients']['individuals']['sms_panel_bulk_recipients_users_title']['#suffix'] = theme('table', $headers, $rows);
   return drupal_render($form);
 }
 
