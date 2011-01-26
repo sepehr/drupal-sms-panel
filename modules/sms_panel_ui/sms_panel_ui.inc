@@ -200,7 +200,7 @@ function sms_panel_ui_form_sms_send_validate($form, &$form_state) {
 
   // Validate recipient numbers.
   // TODO: Validate the number using the smsframework's
-  // sms_validate_number() when it's fixed in its coming verison.
+  // sms_validate_number() when it's fixed in its forthcoming release.
   $form_state['values']['number'] = array_map('trim', explode(',', $form_state['values']['number']));
   foreach ($form_state['values']['number'] as $number) {
     if ($number != sms_formatter($number)) {
