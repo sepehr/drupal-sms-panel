@@ -178,6 +178,7 @@ function sms_panel_ui_form_alter(&$form, $form_state, $form_id) {
   $views_to_alter = array(
     'sms_panel_incoming',
     'sms_panel_outgoing',
+    'sms_panel_bulk',
   );
   $autocomplete_widgets = array(
     'uid' => 'user/autocomplete',
