@@ -147,6 +147,28 @@ function sms_panel_bulk_form_compose() {
     '#autocomplete_path' => 'sms/numbers/autocomplete',
   );
 
+  // Advanced options.
+  $form['dispatch_method'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Dispatch Method'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  $form['dispatch_method']['sms_panel_bulk_dispatch_method'] = array(
+    '#type' => 'radios',
+    '#title' => t('Choose how to send this message'),
+    '#required' => TRUE,
+    '#default_value' => 'batch',
+    '#options' => array(
+      'batch' => t('Batch Operation (Default)'),
+      'regular' => t('Regular (Not recommended)'),
+      'cron_queue' => t('Dispatch on cron (Requires <a href="!link">Job Queue</a>)',
+        array('!link' => 'http://drupal.org/project/job_queue')
+      ),
+    ),
+  );
+
   // Bulk composition details.
   // TODO: Token support.
   $form['sms_panel_bulk_message'] = array(
@@ -196,7 +218,7 @@ function sms_panel_bulk_form_compose_validate($form, &$form_state) {
     form_set_error('sms_panel_bulk_individuals_queue_name', t('You need to specify a user queue name in order to save your selections.'));
   }
 
-  // Check duplicate userqueue names.
+  // Check for duplicate userqueue names.
   $queue_names = array();
   $queues = array_values(userqueue_load_queues(FALSE));
   foreach ($queues as $queue) {
@@ -204,6 +226,11 @@ function sms_panel_bulk_form_compose_validate($form, &$form_state) {
   }
   if (in_array(strtolower($form_state['values']['sms_panel_bulk_individuals_queue_name']), $queue_names)) {
     form_set_error('sms_panel_bulk_individuals_queue_name', t('There were a user queue created with this name before, please choose another name.'));
+  }
+
+  // Validate dispatch method.
+  if ($form_state['values']['sms_panel_bulk_dispatch_method'] == 'cron_queue' && !module_exists('job_queue')) {
+    form_set_error('sms_panel_bulk_dispatch_method', t('You need to install <a href="!link">Job Queue</a> first, so we can add the operation to the cron queue.'));
   }
 }
 
@@ -290,39 +317,21 @@ function sms_panel_bulk_form_compose_submit($form, &$form_state) {
     return;
   }
 
-  // Save the log.
-  $bulk = new stdClass();
-  $bulk->note = $form_state['values']['sms_panel_bulk_note'];
-  $bulk->message = $form_state['values']['sms_panel_bulk_message'];
-  $bulk->recipients = serialize($numbers);
-  sms_bulk_save($bulk);
-
-  // Batch Dispatch.
-  // TODO: Provide the option to dispatch the operation on cron via job_queue.
-  $batch = array(
-    'operations' => array(),
-    'title' => t('Bulk SMS Sending...'),
-    'init_message' => t('Dispatching bulk SMS send operation...'),
-    'error_message' => t('An error occured while sending bulk SMS messages.'),
-    'progress_message' => t('@current out of @total messages has been sent, @remaining remaining. (@percentage%)'),
+  // Dispatch bulk sending.
+  sms_panel_bulk_dispatch(
+    $numbers,
+    $form_state['values']['sms_panel_bulk_message'],
+    $form_state['values']['sms_panel_bulk_note'],
+    $form_state['values']['sms_panel_bulk_dispatch_method']
   );
-
-  // Attach the sms_send operations.
-  foreach ($numbers as $number) {
-    $batch['operations'][] = array('sms_send',
-      array($number, $form_state['values']['sms_panel_bulk_message'])
-    );
-  }
-
-  batch_set($batch);
 }
 
 /**
  * Theme callback for bulk compose form.
  *
  * @todo
- * - Add tablesort ability.
- * - Add table pagination while preserving selections.
+ * - Implement tablesort API.
+ * - Add pagination & preserve user selections.
  */
 function theme_sms_panel_bulk_form_compose($form) {
   if (isset($form['recipients']['individuals']['sms_panel_bulk_recipients_users']) &&

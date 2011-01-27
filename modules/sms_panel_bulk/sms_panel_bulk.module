@@ -49,6 +49,19 @@ function sms_panel_bulk_theme() {
 }
 
 /**
+ * Implements hook_job_queue_functions().
+ */
+function sms_panel_bulk_job_queue_functions() {
+  $functions = array();
+
+  $functions['sms_send'] = array(
+    'title' => t('Bulk SMS Send'),
+  );
+
+  return $functions;
+}
+
+/**
  * Implements hook_views_api().
  */
 function sms_panel_bulk_views_api() {
@@ -64,7 +77,7 @@ function sms_panel_bulk_views_api() {
  * @param $bulk
  *   SMS object to be saved.
  */
-function sms_bulk_save(&$bulk) {
+function sms_panel_bulk_save(&$bulk) {
   $bulk = (object) $bulk;
 
   // Check if the timestamp is set.
@@ -87,5 +100,91 @@ function sms_bulk_save(&$bulk) {
   }
 
   drupal_write_record('sms_panel_bulk', $bulk);
+}
+
+/**
+ * API function to dispatch bulk SMS messages.
+ *
+ * @param $numbers
+ *   An array of valid numbers to send $message to.
+ * @param $message
+ *   SMS text to be sent.
+ * @param $note
+ *   Bulk send note to be logged.
+ * @param $method
+ *   Indicates dispatch method.
+ * @param $batch_process
+ *   If the $method is set to 'batch',
+ *   indicated whether to process the operation or not.
+ * @param $log
+ *   Whether to log the dispatch or not.
+ */
+function sms_panel_bulk_dispatch($numbers, $message, $note = '', $method = 'batch', $batch_process = FALSE, $log = TRUE) {
+  switch ($method) {
+    case 'batch':
+      $batch = array(
+        'operations' => array(),
+        'title' => t('Bulk SMS Sending...'),
+        'init_message' => t('Dispatching bulk SMS send operation...'),
+        'error_message' => t('An error occured while sending bulk SMS messages.'),
+        'progress_message' => t('@current out of @total messages has been sent, @remaining remaining. (@percentage%)'),
+      );
+      // Attach sms_send operations.
+      foreach ($numbers as $number) {
+        $batch['operations'][] = array('sms_send',
+          array($number, $message)
+        );
+      }
+      // Set and process the operations.
+      batch_set($batch);
+      if ($batch_process) {
+        batch_process();
+      }
+      break;
+
+    case 'cron_queue':
+      // Add a cron job per each SMS message.
+      foreach ($numbers as $number) {
+        job_queue_add(
+          'sms_send',
+          t('Send a SMS message to %number.', array('%number' => $number)),
+          array($number, $message)
+        );
+      }
+      // Notify user.
+      drupal_set_message(t('@count SMS sending jobs has been queued to be sent on forthcoming cron runs. You might want to <a href="!link">run cron manually</a>.',
+        array('@count' => count($numbers), '!link' => url('admin/reports/status/run-cron'))
+      ));
+      break;
+
+    case 'regular':
+      $fail = 0;
+      foreach ($numbers as $number) {
+        if (!sms_send($number, $message)) {
+          ++$fail;
+        }
+      }
+      // Notify user.
+      if (!$fail) {
+        drupal_set_message(t('@count SMS messages has been sent successfully.',
+          array('@count' => count($numbers))
+        ));
+      }
+      else {
+        drupal_set_message(t('@count SMS messages has been failed to be sent. Error details has been logged.',
+          array('@count' => $fail)
+        ));
+      }
+      break;
+  }
+
+  // Log if requested so.
+  if ($log) {
+    $bulk = new stdClass();
+    $bulk->note = $note;
+    $bulk->message = $message;
+    $bulk->recipients = serialize($numbers);
+    sms_panel_bulk_save($bulk);
+  }
 }
 
