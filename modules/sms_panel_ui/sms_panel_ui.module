@@ -41,7 +41,7 @@ function sms_panel_ui_menu() {
 
   if (module_exists('sms_panel_bulk')) {
     $items['admin/smsframework/panel/compose/normal'] = array(
-      'title' => 'Singular',
+      'title' => 'Simple',
       'description' => 'Compose a new SMS message.',
       'page callback' => 'drupal_get_form',
       'page arguments' => array('sms_panel_ui_form_sms_send'),
