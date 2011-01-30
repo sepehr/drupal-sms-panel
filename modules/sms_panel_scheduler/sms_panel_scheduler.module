@@ -1,0 +1,231 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * Contains necessary hook implementations, callbacks & helpers.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function sms_panel_scheduler_form_sms_panel_bulk_form_compose_alter(&$form, $form_state) {
+  // Add dispatch method option and proper dependencies.
+  $form['dispatch_method']['sms_panel_bulk_dispatch_method']['#options']['scheduled'] = t('Schedule to be sent in future (Requires <a href="!link">Job Queue</a>)',
+    array('!link' => 'http://drupal.org/project/job_queue')
+  );
+
+  // Inject job scheduler settings fields.
+  _sms_panel_scheduler_fields($form['dispatch_method']);
+
+  // Attach additional validation and submission callbacks.
+  $form['#submit'][] = 'sms_panel_scheduler_form_compose_submit';
+  $form['#validate'][] = 'sms_panel_scheduler_form_compose_validate';
+
+  // Do we need a hook_sms_panel_dispatch_method_info()?
+  // Don't think so, the possible methods are absolutely limited.
+}
+
+/**
+ * Validation callback for SMS Panel Bulk Compose form.
+ */
+function sms_panel_scheduler_form_compose_validate($form, &$form_state) {
+  if ($form_state['values']['sms_panel_bulk_dispatch_method'] == 'scheduled') {
+
+  }
+}
+
+/**
+ * Submission callback for SMS Panel Bulk Compose form.
+ */
+function sms_panel_scheduler_form_compose_submit($form, &$form_state) {
+  if ($form_state['values']['sms_panel_bulk_dispatch_method'] == 'scheduled') {
+
+  }
+}
+
+/**
+ * SMS Panel Scheduler callback.
+ *
+ * @param $job
+ *   Scheduler job array.
+ */
+function sms_panel_scheduler() {
+
+}
+
+/**
+ * Helper function which injects required scheduler settings fields to a form array.
+ *
+ * @param $form
+ *   Form array.
+ *
+ * @return
+ *   Scheduler fields.
+ */
+function _sms_panel_scheduler_fields(&$form) {
+  // Include CTools dependency API.
+  ctools_include('dependent');
+
+  // Scheduler settings wrapper.
+  $form['scheduler_settings'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Schedule Settings'),
+    '#collapsible' => TRUE,
+    // CTools dependent API compliant.
+    '#input' => TRUE,
+    '#process' => array('ctools_dependent_process'),
+    '#id' => 'sms-panel-scheduler-settings',
+    '#prefix' => '<div id="sms-panel-scheduler-settings-wrapper">',
+    '#suffix' => '</div>',
+    '#dependency' => array(
+      'radio:sms_panel_bulk_dispatch_method' => array('scheduled'),
+    ),
+  );
+
+  // First run.
+  $form['scheduler_settings']['start'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('First Run'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  $form['scheduler_settings']['start']['sms_panel_scheduler_start_hour'] = array(
+    '#type' => 'select',
+    '#title' => t('Hour'),
+    '#description' => t("Specify the time in which you wish to perform this job. Not accurate enough? ya, It's cron baby!"),
+    '#default_value' => 17,
+    '#options' => _sms_panel_scheduler_hours(),
+  );
+
+  $form['scheduler_settings']['start']['sms_panel_scheduler_start_date'] = array(
+    '#type' => 'date',
+    '#title' => t('Date'),
+    '#description' => t('Specify the date in which you wish to perform this job.'),
+  );
+
+  // Periodic runs.
+  $form['scheduler_settings']['periodic'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Priodic Runs'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  $form['scheduler_settings']['periodic']['sms_panel_scheduler_periodic'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Check if you wish to keep this as a periodical cron job.'),
+    '#description' => t('By checking this option the job will be performed on periodical basis.'),
+    '#default_value' => 0,
+    // CTools dependent API compliant.
+    '#id' => 'sms-panel-scheduler-periodic',
+  );
+
+  $form['scheduler_settings']['periodic']['sms_panel_scheduler_every'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Repeat the job every'),
+    '#description' => t('Please enter a valid integer and then specify its time unit below.'),
+    // CTools dependent API compliant.
+    '#process' => array('ctools_dependent_process'),
+    '#dependency' => array('sms-panel-scheduler-periodic' => array(TRUE)),
+  );
+
+  $form['scheduler_settings']['periodic']['sms_panel_scheduler_every_unit'] = array(
+    '#type' => 'radios',
+    '#title' => t('Time unit'),
+    '#description' => t('Please choose the preiod time unit.'),
+    '#default' => 'none',
+    '#options' => array(
+      'none'  => t('None'),
+      'hour'  => t('Hour(s)'),
+      'day'   => t('Day(s)'),
+      'month' => t('Month(s)'),
+      'year'  => t('Year(s)'),
+    ),
+    // CTools dependent API compliant.
+    '#id'=>'sms-panel-scheduler-every-unit',
+    '#prefix' => '<div id="sms-panel-scheduler-every-unit-wrapper">',
+    '#suffix' => '</div>',
+    '#process' => array('expand_radios', 'ctools_dependent_process'),
+    '#dependency' => array('sms-panel-scheduler-periodic' => array(TRUE)),
+  );
+
+  // Runs expiry time.
+  $form['scheduler_settings']['periodic']['expiry'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Expiry Time'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    // CTools dependent API compliant.
+    '#input' => TRUE,
+    '#process' => array('ctools_dependent_process'),
+    '#id' => 'sms-panel-scheduler-expiry-settings',
+    '#prefix' => '<div id="sms-panel-scheduler-expiry-settings-wrapper">',
+    '#suffix' => '</div>',
+    '#dependency' => array('sms-panel-scheduler-periodic' => array(TRUE)),
+  );
+
+  $form['scheduler_settings']['periodic']['expiry']['sms_panel_scheduler_expiry'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Check if you wish to expire this periodical cron job at a specific time.'),
+    '#description' => t('By checking this option the job will be deleted from the cron queue at the specified time.'),
+    '#default_value' => 0,
+    // CTools dependent API compliant.
+    '#id' =>'sms-panel-scheduler-expiry',
+  );
+
+  $form['scheduler_settings']['periodic']['expiry']['sms_panel_scheduler_expiry_hour'] = array(
+    '#type' => 'select',
+    '#title' => t('Expiry Hour'),
+    '#default_value' => 17,
+    '#options' => _sms_panel_scheduler_hours(),
+    // CTools dependent API compliant.
+    '#process' => array('ctools_dependent_process'),
+    '#dependency' => array('sms-panel-scheduler-expiry' => array(TRUE)),
+  );
+
+  $form['scheduler_settings']['periodic']['expiry']['sms_panel_scheduler_expiry_date'] = array(
+    '#type' => 'date',
+    '#title' => t('Expiry Date'),
+    // CTools dependent API compliant.
+    '#process' => array('expand_date', 'ctools_dependent_process'),
+    '#dependency' => array('sms-panel-scheduler-expiry' => array(TRUE)),
+  );
+}
+
+/**
+ * Helper function to return a translatable array of scheduling hours.
+ *
+ * @return
+ *   A translatable array of hours.
+ */
+function _sms_panel_scheduler_hours() {
+  return array(
+    1  => t('01:00 AM'),
+    2  => t('02:00 AM'),
+    3  => t('03:00 AM'),
+    4  => t('04:00 AM'),
+    5  => t('05:00 AM'),
+    6  => t('06:00 AM'),
+    7  => t('07:00 AM'),
+    8  => t('08:00 AM'),
+    9  => t('09:00 AM'),
+    10 => t('10:00 AM'),
+    11 => t('11:00 AM'),
+    12 => t('12:00 PM'),
+    13 => t('01:00 PM'),
+    14 => t('02:00 PM'),
+    15 => t('03:00 PM'),
+    16 => t('04:00 PM'),
+    17 => t('05:00 PM'),
+    18 => t('06:00 PM'),
+    19 => t('07:00 PM'),
+    20 => t('08:00 PM'),
+    21 => t('09:00 PM'),
+    22 => t('10:00 PM'),
+    23 => t('11:00 PM'),
+    24 => t('12:00 AM'),
+  );
+}
+
