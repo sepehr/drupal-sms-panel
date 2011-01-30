@@ -225,9 +225,9 @@ function sms_panel_bulk_form_compose_validate($form, &$form_state) {
   $queue_names = array();
   $queues = array_values(userqueue_load_queues(FALSE));
   foreach ($queues as $queue) {
-    $queue_names[] = strtolower($queue->title);
+    $queue_names[] = drupal_strtolower($queue->title);
   }
-  if (in_array(strtolower($form_state['values']['sms_panel_bulk_individuals_queue_name']), $queue_names)) {
+  if (in_array(drupal_strtolower($form_state['values']['sms_panel_bulk_individuals_queue_name']), $queue_names)) {
     form_set_error('sms_panel_bulk_individuals_queue_name', t('There were a user queue created with this name before, please choose another name.'));
   }
 
@@ -316,7 +316,7 @@ function sms_panel_bulk_form_compose_submit($form, &$form_state) {
   // Remove empties and dupes, check length validity.
   $numbers = array_unique(array_filter($numbers));
   if (empty($numbers) || !is_array($numbers)) {
-    drupal_set_message('Could not find any numbers to dispatch the send operation against. Please try again.', 'warning');
+    drupal_set_message(t('Could not find any numbers to dispatch the send operation against. Please try again.'), 'warning');
     return;
   }
 
@@ -443,9 +443,9 @@ function _sms_panel_bulk_count_recipients($values) {
 
   // Calculate recipient selection count, not the exact number quantity.
   return count($values['sms_panel_bulk_recipients_numbers']) +
-         _sms_panel_bulk_checkboxes_selections($values['sms_panel_bulk_recipients_roles']) +
-         _sms_panel_bulk_checkboxes_selections($values['sms_panel_bulk_recipients_users']) +
-         _sms_panel_bulk_checkboxes_selections($values['sms_panel_bulk_recipients_queues']);
+    _sms_panel_bulk_checkboxes_selections($values['sms_panel_bulk_recipients_roles']) +
+    _sms_panel_bulk_checkboxes_selections($values['sms_panel_bulk_recipients_users']) +
+    _sms_panel_bulk_checkboxes_selections($values['sms_panel_bulk_recipients_queues']);
 }
 
 /**

@@ -180,6 +180,7 @@ function sms_load($params = array(), $fields = array(), $flush = FALSE) {
   // Get and iterate through the results.
   $sms = array();
   $conditions = $conditions ? $conditions : 'TRUE';
+  // Just ignore that coder critical warning ;)
   $results = db_query("SELECT $fields FROM {smses} WHERE $conditions", $arguments);
 
   while ($sms_object = db_fetch_object($results)) {
