@@ -99,8 +99,8 @@ function sms_panel_scheduler_form_compose_validate($form, &$form_state) {
       if ($expiry_timestamp <= SMS_PANEL_SCHEDULER_TIME + 360 ||
           $expiry_timestamp <= $start_timestamp + 360 ||
           $expiry_timestamp <= $start_timestamp + $freq_timestamp) {
-        form_set_error('sms_panel_scheduler_start_date', t('Expiry date is not valid.'));
-        form_set_error('sms_panel_scheduler_start_hour', t('Arrrrrgh!'));
+        form_set_error('sms_panel_scheduler_expiry_date', t('Expiry date is not valid.'));
+        form_set_error('sms_panel_scheduler_expiry_hour', t('Arrrrrgh!'));
         array_pop($_SESSION['messages']['error']);
       }
     }
