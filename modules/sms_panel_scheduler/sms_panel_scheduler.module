@@ -8,6 +8,10 @@
  * Could not find reliable scheduler API, job_scheduler.module looks promising
  * but it's not stable yet. So this module is "temporary" implementing the logic
  * while depending on Job Queue API as a cron helper.
+ *
+ * @todo
+ * Either implement a scheduler API and remove the built-in logic,
+ * or generalize and breakout the logic into a separate API module.
  */
 
 /**
