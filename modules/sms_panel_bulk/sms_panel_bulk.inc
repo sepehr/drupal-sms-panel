@@ -147,7 +147,7 @@ function sms_panel_bulk_form_compose() {
     '#autocomplete_path' => 'sms/numbers/autocomplete',
   );
 
-  // Advanced options.
+  // Dispatch methods.
   $form['dispatch_method'] = array(
     '#type' => 'fieldset',
     '#title' => t('Dispatch Method'),
@@ -160,6 +160,9 @@ function sms_panel_bulk_form_compose() {
     '#title' => t('Choose how to send this message'),
     '#required' => TRUE,
     '#default_value' => 'batch',
+    '#attributes' => array(
+      'class' => 'sms-panel-bulk-dispatch-methods',
+    ),
     '#options' => array(
       'batch' => t('Batch Operation (Default)'),
       'regular' => t('Regular (Not recommended)'),
