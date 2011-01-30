@@ -11,6 +11,11 @@
  */
 
 /**
+ * Defines script request time.
+ */
+define('SMS_PANEL_SCHEDULER_TIME', time());
+
+/**
  * Implements hook_menu().
  */
 function sms_panel_scheduler_form_sms_panel_bulk_form_compose_alter(&$form, $form_state) {
@@ -27,7 +32,8 @@ function sms_panel_scheduler_form_sms_panel_bulk_form_compose_alter(&$form, $for
   $form['#validate'][] = 'sms_panel_scheduler_form_compose_validate';
 
   // Do we need a hook_sms_panel_dispatch_method_info()?
-  // Don't think so, the possible methods are absolutely limited.
+  // Don't think so, the possible implementations are absolutely
+  // limited for this purpose and hook_form_alter() is powerful enough.
 }
 
 /**
@@ -38,31 +44,63 @@ function sms_panel_scheduler_form_compose_validate($form, &$form_state) {
     return;
   }
 
-  // Check start date, looks unnecessary.
+  // Check start date set, looks unnecessary.
   if (empty($form_state['values']['sms_panel_scheduler_start_date']) || empty($form_state['values']['sms_panel_scheduler_start_hour'])) {
-    form_set_error('sms_panel_scheduler_start_hour');
     form_set_error('sms_panel_scheduler_start_date', t('Since you choose the scheduled dispatch method, you need to specify both start date and time.'));
+    form_set_error('sms_panel_scheduler_start_hour', t('Arrrrrgh!'));
+    array_pop($_SESSION['messages']['error']);
+  }
+
+  // Check start date validity.
+  $start_timestamp = _sms_panel_scheduler_mktime(
+    $form_state['values']['sms_panel_scheduler_start_date'],
+    $form_state['values']['sms_panel_scheduler_start_hour']
+  );
+  // Decline less than 5mins schedules.
+  if ($start_timestamp <= SMS_PANEL_SCHEDULER_TIME + 360) {
+    form_set_error('sms_panel_scheduler_start_date', t('Start date and time is not valid.'));
+    form_set_error('sms_panel_scheduler_start_hour', t('Arrrrrgh!'));
+    array_pop($_SESSION['messages']['error']);
   }
 
   // If it's a priodic cron job.
   if ($form_state['values']['sms_panel_scheduler_periodic']) {
     // Check ferequency.
     if (empty($form_state['values']['sms_panel_scheduler_every']) ||
-        !ctype_digit($form_state['values']['sms_panel_scheduler_every']) ||
-        $form_state['values']['sms_panel_scheduler_every_unit'] == 'none') {
+        $form_state['values']['sms_panel_scheduler_every_unit'] == 0 ||
+        !ctype_digit($form_state['values']['sms_panel_scheduler_every'])) {
       // Setting error on multiple fields.
       form_set_error('sms_panel_scheduler_every_unit', t('Since you marked this as a periodic job, you need to to set a valid period ferequency.'));
       form_set_error('sms_panel_scheduler_every', t('Arrrrrgh!'));
       array_pop($_SESSION['messages']['error']);
     }
+    // Calculate ferequency timestamp.
+    else {
+      $freq_timestamp = (int) $form_state['values']['sms_panel_scheduler_every'] * $form_state['values']['sms_panel_scheduler_every_unit'];
+    }
 
-    // And expiry.
+    // And check expiry.
     if ($form_state['values']['sms_panel_scheduler_expiry']) {
-      // Check expiry date, looks unnecessary.
+      // Check expiry date set, looks unnecessary.
       if (empty($form_state['values']['sms_panel_scheduler_expiry_date']) || empty($form_state['values']['sms_panel_scheduler_expiry_hour'])) {
         // Setting error on multiple fields.
         form_set_error('sms_panel_scheduler_expiry_date', t('Since you choose to expire the periodic job at a specific time, you need to specify both expiry date and time.'));
         form_set_error('sms_panel_scheduler_expiry_hour', t('Arrrrrgh!'));
+        array_pop($_SESSION['messages']['error']);
+      }
+      // Check expiry date validity.
+      $expiry_timestamp = _sms_panel_scheduler_mktime(
+        $form_state['values']['sms_panel_scheduler_expiry_date'],
+        $form_state['values']['sms_panel_scheduler_expiry_hour']
+      );
+      // Decline less than 5mins expiries,
+      // invalid start/expiry timestamp ranges,
+      // and an expiry timestamp less than the specified ferequency+start.
+      if ($expiry_timestamp <= SMS_PANEL_SCHEDULER_TIME + 360 ||
+          $expiry_timestamp <= $start_timestamp + 360 ||
+          $expiry_timestamp <= $start_timestamp + $freq_timestamp) {
+        form_set_error('sms_panel_scheduler_start_date', t('Expiry date is not valid.'));
+        form_set_error('sms_panel_scheduler_start_hour', t('Arrrrrgh!'));
         array_pop($_SESSION['messages']['error']);
       }
     }
@@ -76,7 +114,6 @@ function sms_panel_scheduler_form_compose_submit($form, &$form_state) {
   if ($form_state['values']['sms_panel_bulk_dispatch_method'] != 'scheduled') {
     return;
   }
-
 
 }
 
@@ -173,13 +210,13 @@ function _sms_panel_scheduler_fields(&$form) {
     '#type' => 'radios',
     '#title' => t('Time unit'),
     '#description' => t('Please choose the preiod time unit.'),
-    '#default_value' => 'none',
+    '#default_value' => 0,
     '#options' => array(
-      'none'  => t('None'),
-      'hour'  => t('Hour(s)'),
-      'day'   => t('Day(s)'),
-      'month' => t('Month(s)'),
-      'year'  => t('Year(s)'),
+      0 => t('None'),
+      3600 => t('Hour(s)'),
+      86400 => t('Day(s)'),
+      2592000 => t('Month(s)'),
+      31104000 => t('Year(s)'),
     ),
     // CTools dependent API compliant.
     '#id'=>'sms-panel-scheduler-every-unit',
@@ -251,6 +288,30 @@ function _sms_panel_scheduler_date_after_build($form_element, &$form_state) {
   $now = format_date(time(), 'custom', 'Y');
   $form_element['year']['#options'] = drupal_map_assoc(range($now, $now + 5));
   return $form_element;
+}
+
+/**
+ * Helper function aasdasd a timestamp from date and time form elements.
+ *
+ * @param $date_element
+ *   An array of form date element, containing:
+ *   - year
+ *   - month
+ *   - day
+ *
+ * @param $time_element
+ *   24-format hour integer.
+ *
+ * @return
+ *   Corresponding timestamp.
+ */
+function _sms_panel_scheduler_mktime($date_element, $time_element = 0) {
+  return mktime(
+    (int) $time_element, 0, 0,
+    (int) $date_element['month'],
+    (int) $date_element['day'],
+    (int) $date_element['year']
+  );
 }
 
 /**
