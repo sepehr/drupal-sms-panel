@@ -23,7 +23,7 @@ function sms_panel_bulk_menu() {
   $items = array();
 
   $items['admin/smsframework/panel/compose/bulk'] = array(
-    'title' => 'Bulk Compose',
+    'title' => 'Advanced',
     'Description' => 'Compose a new bulk SMS message.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('sms_panel_bulk_form_compose'),
