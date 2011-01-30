@@ -1,6 +1,11 @@
 <?php
 // $Id$
 
+/**
+ * @file
+ * Implements SMS Panel Bulk SMS delete link handler.
+ */
+
 require_once 'sms_panel_bulk_handler_field_sms_link.inc';
 
 /**

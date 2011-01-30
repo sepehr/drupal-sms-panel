@@ -2,6 +2,11 @@
 // $Id$
 
 /**
+ * @file
+ * Implements SMS Panel Bulk SMS user handler.
+ */
+
+/**
  * Field handler to provide a UID and Username replacement. Also linking to the user profile.
  */
 class sms_panel_bulk_handler_field_user extends views_handler_field {

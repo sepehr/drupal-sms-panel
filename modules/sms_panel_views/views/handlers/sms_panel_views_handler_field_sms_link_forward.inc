@@ -1,6 +1,11 @@
 <?php
 // $Id$
 
+/**
+ * @file
+ * Implements SMS Panel Views SMS forward link handler.
+ */
+
 require_once 'sms_panel_views_handler_field_sms_link.inc';
 
 /**
@@ -13,7 +18,7 @@ class sms_panel_views_handler_field_sms_link_forward extends sms_panel_views_han
   function construct() {
     parent::construct();
   }
-  
+
   /**
    * Field renderer.
    */

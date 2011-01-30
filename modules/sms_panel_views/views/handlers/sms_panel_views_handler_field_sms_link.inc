@@ -2,6 +2,11 @@
 // $Id$
 
 /**
+ * @file
+ * Implements SMS Panel Views SMS view link handler.
+ */
+
+/**
  * Field handler to provide a link to the SMS message.
  */
 class sms_panel_views_handler_field_sms_link extends views_handler_field {

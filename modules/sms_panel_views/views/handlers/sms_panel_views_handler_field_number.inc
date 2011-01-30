@@ -2,6 +2,11 @@
 // $Id$
 
 /**
+ * @file
+ * Implements SMS Panel Views number handler.
+ */
+
+/**
  * Field handler to provide a UID and Username replacement. Also linking to the user profile.
  */
 class sms_panel_views_handler_field_number extends views_handler_field {
@@ -33,7 +38,7 @@ class sms_panel_views_handler_field_number extends views_handler_field {
       '#default_value' => $this->options['link_user_number'],
     );
   }
-  
+
   /**
    * Makes the number link where possible.
    */
@@ -47,7 +52,7 @@ class sms_panel_views_handler_field_number extends views_handler_field {
     }
     return $values->{$this->aliases['number']};
   }
-  
+
   /**
    * Render triger.
    */
@@ -55,3 +60,4 @@ class sms_panel_views_handler_field_number extends views_handler_field {
     return $this->render_link(check_plain($values->{$this->field_alias}), $values);
   }
 }
+
