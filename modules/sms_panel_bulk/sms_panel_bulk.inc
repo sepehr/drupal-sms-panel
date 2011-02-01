@@ -155,20 +155,15 @@ function sms_panel_bulk_form_compose() {
     '#collapsed' => TRUE,
   );
 
+  $options = _sms_panel_bulk_dispatcher_build('names');
   $form['dispatch_method']['sms_panel_bulk_dispatch_method'] = array(
     '#type' => 'radios',
     '#title' => t('Choose how to send this message'),
     '#required' => TRUE,
-    '#default_value' => 'batch',
+    '#options' => $options,
+    '#default_value' => isset($options['batch']) ? 'batch' : 'regular',
     '#attributes' => array(
       'class' => 'sms-panel-bulk-dispatch-methods',
-    ),
-    '#options' => array(
-      'batch' => t('Batch Operation (Default)'),
-      'regular' => t('Regular (Not recommended)'),
-      'cron_queue' => t('Dispatch on cron (Requires <a href="!link">Job Queue</a>)',
-        array('!link' => 'http://drupal.org/project/job_queue')
-      ),
     ),
   );
 
@@ -231,9 +226,9 @@ function sms_panel_bulk_form_compose_validate($form, &$form_state) {
     form_set_error('sms_panel_bulk_individuals_queue_name', t('There were a user queue created with this name before, please choose another name.'));
   }
 
-  // Validate dispatch method.
-  if ($form_state['values']['sms_panel_bulk_dispatch_method'] == 'cron_queue' && !module_exists('job_queue')) {
-    form_set_error('sms_panel_bulk_dispatch_method', t('You need to install <a href="!link">Job Queue</a> first, so we can add the operation to the cron queue.'));
+  // Validate dispatcher method.
+  if (!_sms_panel_bulk_dispatcher_exists($form_state['values']['sms_panel_bulk_dispatch_method'])) {
+    form_set_error('sms_panel_bulk_dispatch_method', t('Could not find the requested dispatcher.'));
   }
 }
 
@@ -248,7 +243,7 @@ function sms_panel_bulk_form_compose_submit($form, &$form_state) {
   if (!empty($selections)) {
     foreach ($selections as $rid) {
       $results = db_query("SELECT number FROM {users_roles} ur
-                          LEFT JOIN {sms_user} su ON ur.uid = su.uid
+                          LEFT JOIN {'#options' => _sms_panel_bulk_dispatchers_build('names'),sms_user} su ON ur.uid = su.uid
                           WHERE ur.rid = '%d' AND su.delta = 0 AND su.status = 2", $rid);
       while ($recipient = db_fetch_object($results)) {
         $numbers[] = $recipient->number;
@@ -316,11 +311,11 @@ function sms_panel_bulk_form_compose_submit($form, &$form_state) {
   // Remove empties and dupes, check length validity.
   $numbers = array_unique(array_filter($numbers));
   if (empty($numbers) || !is_array($numbers)) {
-    drupal_set_message(t('Could not find any numbers to dispatch the send operation against. Please try again.'), 'warning');
+    drupal_set_message(t('Could not find any numbers to dispatch the send operation against. Please try again.'), 'error');
     return;
   }
 
-  // Dispatch bulk sending.
+  // Dispatch.
   sms_panel_bulk_dispatch(
     $numbers,
     $form_state['values']['sms_panel_bulk_message'],

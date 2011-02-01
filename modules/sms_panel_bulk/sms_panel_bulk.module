@@ -4,6 +4,9 @@
 /**
  * @file
  * SMS Panel Bulk hooks implementations and helper functions.
+ *
+ * @todo
+ * Fix views handlers.
  */
 
 /**
@@ -62,6 +65,32 @@ function sms_panel_bulk_job_queue_functions() {
 }
 
 /**
+ * Implements hook_sms_panel_bulk_dispatcher().
+ */
+function sms_panel_bulk_sms_panel_bulk_dispatcher() {
+  $dispatchers = array();
+
+  $dispatchers['regular'] = array(
+    'name' => t('Regular (Not recommended)'),
+    'callback' => 'sms_panel_bulk_dispatcher_regular',
+  );
+
+  $dispatchers['batch'] = array(
+    'name' => t('Batch Operation (recommended)'),
+    'callback' => 'sms_panel_bulk_dispatcher_batch',
+  );
+
+  $dispatchers['cron'] = array(
+    'name' => t('Dispatch on cron (Requires <a href="!link">Job Queue</a>)',
+      array('!link' => 'http://drupal.org/project/job_queue')
+    ),
+    'callback' => 'sms_panel_bulk_dispatcher_cron',
+  );
+
+  return $dispatchers;
+}
+
+/**
  * Implements hook_views_api().
  */
 function sms_panel_bulk_views_api() {
@@ -111,74 +140,24 @@ function sms_panel_bulk_save(&$bulk) {
  *   SMS text to be sent.
  * @param $note
  *   Bulk send note to be logged.
- * @param $method
+ * @param $dispatcher
  *   Indicates dispatch method.
- * @param $batch_process
- *   If the $method is set to 'batch',
- *   indicated whether to process the operation or not.
  * @param $log
  *   Whether to log the dispatch or not.
  */
-function sms_panel_bulk_dispatch($numbers, $message, $note = '', $method = 'batch', $batch_process = FALSE, $log = TRUE) {
-  switch ($method) {
-    case 'batch':
-      $batch = array(
-        'operations' => array(),
-        'title' => t('Bulk SMS Sending...'),
-        'init_message' => t('Dispatching bulk SMS send operation...'),
-        'error_message' => t('An error occured while sending bulk SMS messages.'),
-        'progress_message' => t('@current out of @total messages has been sent, @remaining remaining. (@percentage%)'),
-      );
-      // Attach sms_send operations.
-      foreach ($numbers as $number) {
-        $batch['operations'][] = array('sms_send',
-          array($number, $message)
-        );
-      }
-      // Set and process the operations.
-      batch_set($batch);
-      if ($batch_process) {
-        batch_process();
-      }
-      break;
-
-    case 'cron_queue':
-      // Add a cron job per each SMS message.
-      foreach ($numbers as $number) {
-        job_queue_add(
-          'sms_send',
-          t('Send a SMS message to %number.', array('%number' => $number)),
-          array($number, $message)
-        );
-      }
-      // Notify user.
-      drupal_set_message(t('@count SMS sending jobs has been queued to be sent on forthcoming cron runs. You might want to <a href="!link">run cron manually</a>.',
-        array('@count' => count($numbers), '!link' => url('admin/reports/status/run-cron'))
-      ));
-      break;
-
-    case 'regular':
-      $fail = 0;
-      foreach ($numbers as $number) {
-        if (!sms_send($number, $message)) {
-          ++$fail;
-        }
-      }
-      // Notify user.
-      if (!$fail) {
-        drupal_set_message(t('@count SMS messages has been sent successfully.',
-          array('@count' => count($numbers))
-        ));
-      }
-      else {
-        drupal_set_message(t('@count SMS messages has been failed to be sent. Error details has been logged.',
-          array('@count' => $fail)
-        ));
-      }
-      break;
+function sms_panel_bulk_dispatch($numbers, $message, $note = '', $dispatcher = 'batch', $log = TRUE) {
+  // Get available dispatchers.
+  $dispatchers = _sms_panel_bulk_dispatcher_build();
+  // Check if the requested dispatched exists.
+  if (!_sms_panel_bulk_dispatcher_exists($dispatcher, $dispatchers)) {
+    drupal_set_message(t('There were a problem finding the requested dispatcher.'), 'error');
+    return;
   }
 
-  // Log if requested so.
+  // Call the proper dispatch callback.
+  $dispatchers[$dispatcher]['callback']($numbers, $message);
+
+  // And log the operation, if requested so.
   if ($log) {
     $bulk = new stdClass();
     $bulk->note = $note;
@@ -186,5 +165,150 @@ function sms_panel_bulk_dispatch($numbers, $message, $note = '', $method = 'batc
     $bulk->recipients = serialize($numbers);
     sms_panel_bulk_save($bulk);
   }
+}
+
+/**
+ * Dispatch callback of regular dispatcher.
+ *
+ * @param $numbers
+ *   An array of valid numbers to send $message to.
+ * @param $message
+ *   SMS text to be sent.
+ *
+ * @see sms_panel_bulk_sms_panel_bulk_dispatcher()
+ */
+function sms_panel_bulk_dispatcher_regular($numbers, $message) {
+  $fail = 0;
+  foreach ($numbers as $number) {
+    if (!sms_send($number, $message)) {
+      ++$fail;
+    }
+  }
+
+  // Notify.
+  if (!$fail) {
+    drupal_set_message(t('@count SMS messages has been sent successfully.',
+      array('@count' => count($numbers))
+    ));
+  }
+  // $fail times failed.
+  else {
+    drupal_set_message(t('@count SMS messages has been failed to be sent. Error details has been logged.',
+      array('@count' => $fail)
+    ));
+  }
+}
+
+/**
+ * Dispatch callback of batch dispatcher.
+ *
+ * @param $numbers
+ *   An array of valid numbers to send $message to.
+ * @param $message
+ *   SMS text to be sent.
+ * @param $batch_process
+ *   Whether to manually process the operation or not.
+ *
+ * @see sms_panel_bulk_sms_panel_bulk_dispatcher()
+ */
+function sms_panel_bulk_dispatcher_batch($numbers, $message, $batch_process = FALSE) {
+  $batch = array(
+    'operations' => array(),
+    'title' => t('Bulk SMS Sending...'),
+    'init_message' => t('Dispatching bulk SMS send operation...'),
+    'error_message' => t('An error occured while sending bulk SMS messages.'),
+    'progress_message' => t('@current out of @total messages has been sent, @remaining remaining. (@percentage%)'),
+  );
+
+  // Attach sms_send operation per $number.
+  foreach ($numbers as $number) {
+    $batch['operations'][] = array('sms_send',
+      array($number, $message)
+    );
+  }
+
+  // Set & process.
+  batch_set($batch);
+  if ($batch_process) {
+    batch_process();
+  }
+}
+
+/**
+ * Dispatch callback of cron queue dispatcher.
+ *
+ * @param $numbers
+ *   An array of valid numbers to send $message to.
+ * @param $message
+ *   SMS text to be sent.
+ *
+ * @see sms_panel_bulk_sms_panel_bulk_dispatcher()
+ */
+function sms_panel_bulk_dispatcher_cron($numbers, $message) {
+  // Add a cron job per each $number.
+  foreach ($numbers as $number) {
+    // TODO: Add a fake wrapper function to be periorized properly.
+    job_queue_add(
+      'sms_send',
+      t('Send a SMS message to %number.', array('%number' => $number)),
+      array($number, $message)
+    );
+  }
+
+  // Notify user.
+  drupal_set_message(t('@count SMS sending jobs has been queued to be sent on forthcoming cron runs. You might want to <a href="!link">run cron manually</a>.',
+    array('@count' => count($numbers), '!link' => url('admin/reports/status/run-cron'))
+  ));
+}
+
+/**
+ * Static cache helper to build a list of available dispatchers.
+ *
+ * @param $type
+ *   Type of return list.
+ *   - all: An array All dispatchers and their info.
+ *   - names: A identifier keyed array of dispatcher names.
+ * @param $reset
+ *   Whether to reset built-in static cache.
+ *
+ * @return
+ *   A $type formed array of dispatchers.
+ */
+function _sms_panel_bulk_dispatcher_build($type = 'all', $reset = FALSE) {
+  static $dispatchers = array();
+
+  if (empty($dispatchers) || $reset) {
+    // Get available dispatchers.
+    $dispatchers_defined = module_invoke_all('sms_panel_bulk_dispatcher');
+    // Drop invalid dispatchers.
+    foreach ($dispatchers_defined as $identifier => $info) {
+      if (isset($info['callback']) && function_exists($info['callback'])) {
+        $dispatchers['all'][$identifier] = $info;
+        $dispatchers['names'][$identifier] = $info['name'];
+      }
+    }
+  }
+
+  return $dispatchers[$type];
+}
+
+/**
+ * Helper function to check whether a dispatcher defined.
+ *
+ * @param $dispatcher
+ *   Dispatcher identifier.
+ * @param $dispatchers
+ *   Optional array of previously built dispatchers.
+ *
+ * @return
+ *   Boolean value.
+ */
+function _sms_panel_bulk_dispatcher_exists($dispatcher, $dispatchers = FALSE) {
+  $dispatchers = $dispatchers ? $dispatchers : _sms_panel_bulk_dispatcher_build('names');
+  return isset($dispatchers[$dispatcher]);
+}
+
+function sms_panel_bulk_init() {
+
 }
 
