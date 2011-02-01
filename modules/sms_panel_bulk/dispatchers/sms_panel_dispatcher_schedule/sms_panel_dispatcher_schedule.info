@@ -1,5 +1,5 @@
 ; $Id$
-name = "SMS Panel Scheduler"
+name = "SMS Panel Schedule Dispatcher"
 description = "Extends SMS Panel Bulk's dispatch methods with scheduling abilities."
 core = 6.x
 package = SMS Panel

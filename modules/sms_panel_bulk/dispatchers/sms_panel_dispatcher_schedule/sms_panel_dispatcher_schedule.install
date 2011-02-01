@@ -1,0 +1,17 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * Contains un/installation hook implementations.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function sms_panel_dispatcher_schedule_install() {
+  drupal_set_message(st('SMS Panel Schedule Dispatcher has been installed. A new dispatch method has been added to the <a href="!link">SMS Panel Advanced Compose</a> form.',
+    array('!link' => url('admin/smsframework/panel/compose/bulk'))
+  ));
+}
+
