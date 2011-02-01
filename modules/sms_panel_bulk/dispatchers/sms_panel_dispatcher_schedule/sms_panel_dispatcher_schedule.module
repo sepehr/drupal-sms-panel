@@ -39,15 +39,14 @@ function sms_panel_dispatcher_schedule_sms_panel_bulk_dispatcher() {
  * Implements hook_form_ID_alter().
  *
  * Yeah! That's so damn long, I know. With 64M of memory,
- * we're able to create a function with about 2 million chars!
+ * we're able to create a function with about 2 million chars name!
  * I just found that, take it easy ;)
  */
 function sms_panel_dispatcher_schedule_form_sms_panel_bulk_form_compose_alter(&$form, $form_state) {
   // Inject job scheduler settings fields.
   _sms_panel_dispatcher_schedule_fields($form['dispatch_method']);
 
-  // Attach additional validation and submission callbacks.
-  $form['#submit'][] = 'sms_panel_dispatcher_schedule_submit';
+  // Attach additional validation callback.
   $form['#validate'][] = 'sms_panel_dispatcher_schedule_validate';
 }
 
@@ -130,9 +129,10 @@ function sms_panel_dispatcher_schedule_validate($form, &$form_state) {
  * @param $message
  *   SMS text to be sent.
  * @param $data
- *   Form state data.
+ *   If called via a submission form callback,
+ *   $data contains form's $form_state['values'].
  */
-function sms_panel_dispatcher_schedule() {
+function sms_panel_dispatcher_schedule($numbers, $message, $data = array()) {
 
 }
 
