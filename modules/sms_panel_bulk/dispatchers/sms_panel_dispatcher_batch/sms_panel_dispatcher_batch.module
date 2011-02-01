@@ -1,0 +1,59 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * SMS Panel Batch Dispatcher hook implementations & callbacks.
+ */
+
+/**
+ * Implements hook_sms_panel_bulk_dispatcher().
+ */
+function sms_panel_dispatcher_batch_sms_panel_bulk_dispatcher() {
+  $dispatchers = array();
+
+  $dispatchers['batch'] = array(
+    'name' => t('Batch Operation (Recommended)'),
+    'callback' => 'sms_panel_dispatcher_batch',
+  );
+
+  return $dispatchers;
+}
+
+/**
+ * Dispatch callback of batch dispatcher.
+ *
+ * @param $numbers
+ *   An array of valid numbers to send $message to.
+ * @param $message
+ *   SMS text to be sent.
+ * @param $batch_process
+ *   Whether to manually process the operation or not.
+ *
+ * @see sms_panel_bulk_dispatch()
+ * @see _sms_panel_bulk_dispatcher_build()
+ * @see sms_panel_dispatcher_batch_sms_panel_bulk_dispatcher()
+ */
+function sms_panel_dispatcher_batch($numbers, $message, $batch_process = FALSE) {
+  $batch = array(
+    'operations' => array(),
+    'title' => t('Bulk SMS Sending...'),
+    'init_message' => t('Dispatching bulk SMS send operation...'),
+    'error_message' => t('An error occured while sending bulk SMS messages.'),
+    'progress_message' => t('@current out of @total messages has been sent, @remaining remaining. (@percentage%)'),
+  );
+
+  // Attach sms_send operation per $number.
+  foreach ($numbers as $number) {
+    $batch['operations'][] = array('sms_send',
+      array($number, $message)
+    );
+  }
+
+  // Set & process.
+  batch_set($batch);
+  if ($batch_process) {
+    batch_process();
+  }
+}
+

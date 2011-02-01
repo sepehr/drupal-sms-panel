@@ -1,0 +1,8 @@
+; $Id$
+name = "SMS Panel Cron Dispatcher"
+description = "Queued cron dispatch method for SMS Panel Bulk using Job Queue API."
+package = SMS Framework
+core = 6.x
+dependencies[] = job_queue
+dependencies[] = sms_panel_bulk
+

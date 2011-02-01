@@ -1,0 +1,7 @@
+; $Id$
+name = "SMS Panel Batch Dispatcher"
+description = "A batch operation dispatch method for SMS Panel Bulk."
+package = SMS Framework
+core = 6.x
+dependencies[] = sms_panel_bulk
+

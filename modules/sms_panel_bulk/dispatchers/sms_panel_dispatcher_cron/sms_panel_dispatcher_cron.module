@@ -1,0 +1,86 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * SMS Panel Cron Dispatcher hook implementations & callbacks.
+ */
+
+/**
+ * Implements hook_job_queue_functions().
+ */
+function sms_panel_dispatcher_cron_job_queue_functions() {
+  $functions = array();
+
+  $functions['_sms_panel_dispatcher_cron_send'] = array(
+    'title' => t('Bulk SMS Send'),
+  );
+
+  return $functions;
+}
+
+/**
+ * Implements hook_sms_panel_bulk_dispatcher().
+ */
+function sms_panel_dispatcher_cron_sms_panel_bulk_dispatcher() {
+  $dispatchers = array();
+
+  $dispatchers['cron'] = array(
+    'name' => t('Dispatch on cron (Using <a href="!link">Job Queue API</a>)',
+      array('!link' => url('admin/reports/job_queue'))
+    ),
+    'callback' => 'sms_panel_dispatcher_cron',
+  );
+
+  return $dispatchers;
+}
+
+/**
+ * Dispatch callback of cron queue dispatcher.
+ *
+ * @param $numbers
+ *   An array of valid numbers to send $message to.
+ * @param $message
+ *   SMS text to be sent.
+ *
+ * @see job_queue_add()
+ * @see sms_panel_bulk_dispatch()
+ * @see _sms_panel_bulk_dispatcher_build()
+ * @see sms_panel_dispatcher_cron_sms_panel_bulk_dispatcher()
+ */
+function sms_panel_dispatcher_cron($numbers, $message) {
+  // Push a cron job in queue, per each $number.
+  foreach ($numbers as $number) {
+    job_queue_add(
+      '_sms_panel_dispatcher_cron_send',
+      t('Send a SMS message to %number.', array('%number' => $number)),
+      array($number, $message)
+    );
+  }
+
+  // Notify.
+  drupal_set_message(t('@count SMS sending jobs has been queued to be sent on forthcoming cron runs. You might want to <a href="!cron-link">run cron manually</a> or <a href="!queue-link">view the job queue</a>.',
+    array(
+      '@count' => count($numbers),
+      '!cron-link'  => url('admin/reports/status/run-cron'),
+      '!queue-link' => url('admin/reports/job_queue')
+    )
+  ));
+}
+
+/**
+ * Fake wrapper function for sms_send().
+ *
+ * So it could be prioritized properly in Job Queue's cron queue.
+ *
+ * @param $number
+ *   A valid number to send the $message to.
+ * @param $message
+ *   SMS text to be sent.
+ *
+ * @see sms_panel_dispatcher_cron_job_queue_functions()
+ */
+function _sms_panel_dispatcher_cron_send($number, $message) {
+  sms_send($number, $message);
+}
+
