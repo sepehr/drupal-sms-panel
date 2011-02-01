@@ -284,9 +284,9 @@ function sms_panel_bulk_form_compose_submit($form, &$form_state) {
       // Get the new queue ID.
       $queue->uqid = db_result(db_query("SELECT LAST_INSERT_ID()"));
     }
-$form_state['values']
+
     // Per each selection, save the number
-    // and add the uselection to new queue if available.
+    // and add the selection to new queue if available.
     foreach ($selections as $uid) {
       $user = user_load($uid);
       $numbers[] = $user->sms_user[0]['number'];
