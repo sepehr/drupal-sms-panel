@@ -284,7 +284,7 @@ function sms_panel_bulk_form_compose_submit($form, &$form_state) {
       // Get the new queue ID.
       $queue->uqid = db_result(db_query("SELECT LAST_INSERT_ID()"));
     }
-
+$form_state['values']
     // Per each selection, save the number
     // and add the uselection to new queue if available.
     foreach ($selections as $uid) {
@@ -320,7 +320,8 @@ function sms_panel_bulk_form_compose_submit($form, &$form_state) {
     $numbers,
     $form_state['values']['sms_panel_bulk_message'],
     $form_state['values']['sms_panel_bulk_note'],
-    $form_state['values']['sms_panel_bulk_dispatch_method']
+    $form_state['values']['sms_panel_bulk_dispatch_method'],
+    $form_state['values']
   );
 }
 

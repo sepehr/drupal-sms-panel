@@ -117,10 +117,13 @@ function sms_panel_bulk_save(&$bulk) {
  *   Bulk send note to be logged.
  * @param $dispatcher
  *   Indicates dispatch method.
+ * @param $data
+ *   If called via a submission form callback,
+ *   $data contains form's $form_state['values'].
  * @param $log
  *   Whether to log the dispatch or not.
  */
-function sms_panel_bulk_dispatch($numbers, $message, $note = '', $dispatcher = 'regular', $log = TRUE) {
+function sms_panel_bulk_dispatch($numbers, $message, $note = '', $dispatcher = 'regular', $data = array(), $log = TRUE) {
   // Get available dispatchers.
   $dispatchers = _sms_panel_bulk_dispatcher_build();
   // Check if the requested dispatched exists.
@@ -130,7 +133,7 @@ function sms_panel_bulk_dispatch($numbers, $message, $note = '', $dispatcher = '
   }
 
   // Call the proper dispatch callback.
-  $dispatchers[$dispatcher]['callback']($numbers, $message);
+  $dispatchers[$dispatcher]['callback']($numbers, $message, $data);
 
   // And log the operation, if requested so.
   if ($log) {
