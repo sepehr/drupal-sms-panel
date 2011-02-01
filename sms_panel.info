@@ -2,6 +2,6 @@
 name = "SMS Panel API"
 description = "Provides a simple API to for a central SMS management panel."
 core = 6.x
-package = SMS Framework
+package = SMS Panel
 dependencies[] = sms
 

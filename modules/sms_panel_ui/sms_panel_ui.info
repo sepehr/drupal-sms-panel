@@ -2,7 +2,7 @@
 name = "SMS Panel UI"
 description = "Provides a administrative UI for SMS Panel API."
 core = 6.x
-package = SMS Framework
+package = SMS Panel
 dependencies[] = sms_panel
 dependencies[] = sms_panel_views
 

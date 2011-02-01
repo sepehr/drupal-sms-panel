@@ -2,7 +2,7 @@
 name = "SMS Panel Views API"
 description = "Exposes SMS Panel data to Views 2.x module."
 core = 6.x
-package = SMS Framework
+package = SMS Panel
 dependencies[] = views
 dependencies[] = sms_user
 dependencies[] = sms_panel
