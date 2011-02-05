@@ -165,16 +165,17 @@ function sms_panel_dispatcher_schedule($numbers, $message, $data = array()) {
   }
 
   // Notify.
-  drupal_set_message(t('!count jobs has been scheduled to be sent at %start.',
+  drupal_set_message(t('!count jobs has been scheduled to be sent at %start. You might want to <a href="!link">browse the queue</a>.',
     array(
     	'!count' => count($numbers),
     	'%start' => format_date($start, 'large'),
+      '!link' => url('admin/reports/job_queue'),
    	)
   ));
 }
 
 /**
- * Cron queued helper function, implements scheduler logic.
+ * Cron queued helper function, implements scheduler logic per job.
  *
  * @param $number
  *   A number to send the $message to.
@@ -191,7 +192,7 @@ function sms_panel_dispatcher_schedule($numbers, $message, $data = array()) {
  * @see sms_panel_dispatcher_schedule()
  * @see _sms_panel_dispatcher_schedule_expire()
  *
- * @todo checkout elysia_cron API.
+ * @todo Checkout the elysia_cron API.
  */
 function _sms_panel_dispatcher_schedule($number, $message, $start, $frequency, $expiry) {
   // Ah, early to wakeup, zZzzZ!
@@ -199,7 +200,7 @@ function _sms_panel_dispatcher_schedule($number, $message, $start, $frequency, $
     // Requeue the job.
     job_queue_add(
       '_sms_panel_dispatcher_schedule',
-      t('Scheduled SMS Send to %number, starting at %start.', array(
+      t('Scheduled SMS Send to %number, starting at %start. (requeued)', array(
       	'%number' => $number,
         '%start' => format_date($start, 'small')
       )),
@@ -252,7 +253,7 @@ function _sms_panel_dispatcher_schedule($number, $message, $start, $frequency, $
  *   Number of removed jobs.
  *
  * @see job_queue_add()
- * @see _sms_panel_dispatcher_schedule()
+ * @see _sms_panel_dispatcher_schedule().
  */
 function _sms_panel_dispatcher_schedule_expire($args = array(), $callback = '_sms_panel_dispatcher_schedule') {
   db_query("DELETE FROM {job_queue}
@@ -480,3 +481,4 @@ function _sms_panel_dispatcher_schedule_hours() {
     24 => t('12:00 AM'),
   );
 }
+
