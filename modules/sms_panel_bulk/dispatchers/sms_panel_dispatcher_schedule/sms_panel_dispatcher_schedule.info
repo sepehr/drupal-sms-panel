@@ -5,6 +5,5 @@ core = 6.x
 package = SMS Panel
 dependencies[] = ctools
 dependencies[] = job_queue
-dependencies[] = job_queue_delete
 dependencies[] = sms_panel_bulk
 
