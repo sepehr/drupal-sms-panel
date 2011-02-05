@@ -133,7 +133,133 @@ function sms_panel_dispatcher_schedule_validate($form, &$form_state) {
  *   $data contains form's $form_state['values'].
  */
 function sms_panel_dispatcher_schedule($numbers, $message, $data = array()) {
+  $frequency = $expiry = FALSE;
+  $start = _sms_panel_dispatcher_schedule_mktime(
+    $data['sms_panel_dispatcher_schedule_start_date'],
+    $data['sms_panel_dispatcher_schedule_start_hour']
+  );
 
+  // Calculate ferequency timestamp, if it's a periodic job.
+  if ($data['sms_panel_dispatcher_schedule_periodic']) {
+    $frequency = (int) $data['sms_panel_dispatcher_schedule_every'] * $data['sms_panel_dispatcher_schedule_every_unit'];
+  }
+
+  // Calculate expiry timestamp, if it has a expiry date.
+  if ($data['sms_panel_dispatcher_schedule_expiry']) {
+    $expiry = _sms_panel_dispatcher_schedule_mktime(
+      $data['sms_panel_dispatcher_schedule_expiry_date'],
+      $data['sms_panel_dispatcher_schedule_expiry_hour']
+    );
+  }
+
+  // Push a job to the cron queue per number.
+  foreach ($numbers as $number) {
+    job_queue_add(
+      '_sms_panel_dispatcher_schedule',
+      t('Scheduled SMS Send to %number, starting at %start.', array(
+      	'%number' => $number,
+        '%start' => format_date($start, 'small')
+      )),
+      array($number, $message, $start, $ferequency, $expiry)
+    );
+  }
+
+  // Notify.
+  drupal_set_message(t('!count jobs has been scheduled to be sent at %start.',
+    array(
+    	'!count' => count($numbers),
+    	'%start' => format_date($start, 'large'),
+   	)
+  ));
+}
+
+/**
+ * Cron queued helper function, implements scheduler logic.
+ *
+ * @param $number
+ *   A number to send the $message to.
+ * @param $message
+ *   SMS text to be sent.
+ * @param $start
+ *   Job start timestamp.
+ * @param $frequency
+ *   Job frequency timestamp.
+ * @param $expiry
+ *   Job expiry timestamp.
+ *
+ * @see job_queue_add()
+ * @see sms_panel_dispatcher_schedule()
+ * @see _sms_panel_dispatcher_schedule_expire()
+ *
+ * @todo checkout elysia_cron API.
+ */
+function _sms_panel_dispatcher_schedule($number, $message, $start, $frequency, $expiry) {
+  // Ah, early to wakeup, zZzzZ!
+  if (SMS_PANEL_DISPATCHER_SCHEDULE_TIME < $start) {
+    // Requeue the job.
+    job_queue_add(
+      '_sms_panel_dispatcher_schedule',
+      t('Scheduled SMS Send to %number, starting at %start.', array(
+      	'%number' => $number,
+        '%start' => format_date($start, 'small')
+      )),
+      array($number, $message, $start, $ferequency, $expiry)
+    );
+    return;
+  }
+
+  // TODO: Really?
+  // As ever late, delete expired jobs.
+  if ($expire && $start >= $expire) {
+    $count = _sms_panel_dispatcher_schedule_expire(func_get_args());
+    if ($count) {
+      // Notify.
+      drupal_set_message(t('Removed !count expired scheduled SMS sending jobs.',
+        array('!count' => $count)
+      ));
+      watchdog('cron', 'Removed !count expired scheduled SMS sending jobs.',
+        array('!count' => $count)
+      , WATCHDOG_NOTICE);
+    }
+    return;
+  }
+
+  // Lucky on time!
+  sms_send($number, $message);
+  if ($frequency) {
+    // Queue the next job.
+    job_queue_add(
+      '_sms_panel_dispatcher_schedule',
+      t('Scheduled SMS Send to %number, starting at %start.', array(
+      	'%number' => $number,
+        '%start' => format_date($start + $frequency, 'small')
+      )),
+      array($number, $message, $start, $ferequency, $expiry)
+    );
+  }
+}
+
+/**
+ * Helper function to remove expired scheduled SMS sending job.
+ *
+ * @param $args
+ *   Array of job callback arguments as
+ *   per required for job_queue_add().
+ * @param $callback
+ *   Job callback name.
+ *
+ * @return
+ *   Number of removed jobs.
+ *
+ * @see job_queue_add()
+ * @see _sms_panel_dispatcher_schedule()
+ */
+function _sms_panel_dispatcher_schedule_expire($args = array(), $callback = '_sms_panel_dispatcher_schedule') {
+  db_query("DELETE FROM {job_queue}
+            WHERE function = '%s'
+            AND arguments = '%s'
+            AND created < %d", $callback, serialize($args), SMS_PANEL_DISPATCHER_SCHEDULE_TIME);
+  return db_affected_rows();
 }
 
 /**
@@ -300,7 +426,7 @@ function _sms_panel_dispatcher_schedule_date_after_build($form_element, &$form_s
  * Helper function aasdasd a timestamp from date and time form elements.
  *
  * @param $date_element
- *   An array of form date element, containing:
+ *   An array of form date element:
  *   - year
  *   - month
  *   - day
@@ -354,4 +480,3 @@ function _sms_panel_dispatcher_schedule_hours() {
     24 => t('12:00 AM'),
   );
 }
-
